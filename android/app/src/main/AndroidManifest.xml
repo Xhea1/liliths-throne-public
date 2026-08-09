@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        No storage permissions are declared: user save data lives in a folder the user picks
+        once via the Storage Access Framework (ACTION_OPEN_DOCUMENT_TREE), which grants scoped
+        access to that folder only. Bundled game data lives in private app storage.
+    -->
+    <!--
+        Required even though the server binds to 127.0.0.1 only: Android denies creating any
+        socket without it (SocketException: EPERM). No traffic leaves the device.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".LilithsThroneApplication"
+        android:label="Lilith's Throne"
+        android:hardwareAccelerated="true"
+        android:allowBackup="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.LilithsThrone">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The game logic + local HTTP server run in a foreground service so Android's
+            background-execution limits don't kill them while the user is playing.
+        -->
+        <service
+            android:name=".service.GameService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Hosts the game engine and its local-only HTTP server for the in-app WebView." />
+        </service>
+    </application>
+</manifest>
