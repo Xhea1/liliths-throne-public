@@ -1,0 +1,105 @@
+package com.lilithsthrone.rendering;
+
+import org.w3c.dom.Document;
+
+import com.lilithsthrone.game.character.npc.NPC;
+import com.lilithsthrone.game.character.GameCharacter;
+import com.lilithsthrone.game.dialogue.DialogueNode;
+import com.lilithsthrone.game.dialogue.utils.InventoryInteraction;
+import com.lilithsthrone.game.settings.KeyboardAction;
+import com.lilithsthrone.utils.colours.Colour;
+
+/**
+ * Everything {@code core} needs to push rendered HTML (and a handful of UI-state queries)
+ * to whatever front-end is currently attached, without core depending on that front-end's
+ * UI toolkit directly.
+ *
+ * Desktop's {@code MainController} implements this directly (it already had matching
+ * methods before this type existed). Android's {@code HttpRenderSink} buffers the latest
+ * HTML per panel for its HTTP routes to serve; methods not needed by the milestone that
+ * introduced this interface (most of the panels beyond the main one, tooltip positioning,
+ * inventory/phone/characters-present sub-screens) may throw
+ * {@link UnsupportedOperationException} there rather than pretend to implement UI surfaces
+ * Android doesn't have yet -- see the class-level note on HttpRenderSink for what's covered.
+ */
+public interface RenderSink {
+
+	/**
+	 * Number of response slots a single dialogue page exposes. A game-logic constant (response
+	 * paging arithmetic in core depends on it) that also drives the UI's button layout, so it
+	 * lives here and each front-end reads it rather than declaring its own copy.
+	 */
+	int RESPONSE_COUNT = 15;
+
+	void setMainContent(String content);
+
+	void setAttributePanelContent(String content);
+
+	void setRightPanelContent(String content);
+
+	void setButtonsLeftContent(String content);
+
+	void setButtonsRightContent(String content);
+
+	/** @return the calculated pixel height of the tooltip content, as the desktop UI needs it. */
+	int setTooltipContent(String content);
+
+	void hideTooltip();
+
+	/**
+	 * Escape hatch for the few remaining call sites that push raw JS at the main panel's
+	 * document (e.g. scroll-position bookkeeping) rather than going through one of the
+	 * setXContent methods above. Implementations that have no live script engine (e.g. a
+	 * remote HTML client) may no-op.
+	 */
+	Object executeScript(String script);
+
+	/** The main panel's live DOM, for the call sites that need to read element state back out. */
+	Document getDocument();
+
+	void openInventory();
+
+	void openInventory(NPC npc, InventoryInteraction interaction);
+
+	void openPhone();
+
+	void openPhone(DialogueNode toDialogue);
+
+	void openCharactersPresent();
+
+	void openCharactersPresent(GameCharacter characterViewed);
+
+	void openOptions();
+
+	void updateUILeftPanel();
+
+	/** Full UI refresh (both side panels and their buttons). */
+	void updateUI();
+
+	/** Re-attaches input handlers to the freshly-rendered response buttons. */
+	void setResponseEventListeners();
+
+	/** Stops any in-flight tooltip refresh work; replaces TooltipUpdateThread.cancelThreads. */
+	void cancelTooltipThreads();
+
+	void switchTheme();
+
+	boolean isPrimaryBinding();
+
+	boolean isPhoneDisabled();
+
+	boolean isInventoryDisabled();
+
+	KeyboardAction getActionToBind();
+
+	void setFlashMessageColour(Colour flashMessageColour);
+
+	void setFlashMessageText(String flashMessageText);
+
+	/**
+	 * Called once world generation finishes and a new game's initial state is ready.
+	 * Desktop uses this to redo its FXML/Scene setup (mirroring the pre-split behaviour);
+	 * an HTTP-backed sink has no equivalent "scene" to rebuild and may no-op.
+	 */
+	void onNewGameStarted();
+}
