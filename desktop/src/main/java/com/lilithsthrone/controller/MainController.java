@@ -19,16 +19,11 @@ import org.w3c.dom.events.EventTarget;
 
 import com.lilithsthrone.controller.eventListeners.InventorySelectedItemEventListener;
 import com.lilithsthrone.controller.eventListeners.SetContentEventListener;
-import com.lilithsthrone.controller.eventListeners.buttons.ButtonCharactersEventListener;
 import com.lilithsthrone.controller.eventListeners.buttons.ButtonCopyDialogueEventListener;
-import com.lilithsthrone.controller.eventListeners.buttons.ButtonInventoryEventHandler;
-import com.lilithsthrone.controller.eventListeners.buttons.ButtonJournalEventListener;
-import com.lilithsthrone.controller.eventListeners.buttons.ButtonMainMenuEventListener;
 import com.lilithsthrone.controller.eventListeners.buttons.ButtonMoveEastEventListener;
 import com.lilithsthrone.controller.eventListeners.buttons.ButtonMoveNorthEventListener;
 import com.lilithsthrone.controller.eventListeners.buttons.ButtonMoveSouthEventListener;
 import com.lilithsthrone.controller.eventListeners.buttons.ButtonMoveWestEventListener;
-import com.lilithsthrone.controller.eventListeners.buttons.ButtonZoomEventListener;
 import com.lilithsthrone.controller.eventListeners.tooltips.TooltipHideEventListener;
 import com.lilithsthrone.controller.eventListeners.tooltips.TooltipInformationEventListener;
 import com.lilithsthrone.controller.eventListeners.tooltips.TooltipInventoryEventListener;
@@ -118,6 +113,7 @@ import com.lilithsthrone.game.sex.sexActions.baseActions.PenisVagina;
 import com.lilithsthrone.game.sex.sexActions.baseActionsMisc.PositioningMenu;
 import com.lilithsthrone.main.GameState;
 import com.lilithsthrone.main.Main;
+import com.lilithsthrone.rendering.InformationTooltip;
 import com.lilithsthrone.rendering.RenderSink;
 import com.lilithsthrone.rendering.ImageCache;
 import com.lilithsthrone.rendering.RenderingEngine;
@@ -252,197 +248,57 @@ public class MainController implements Initializable, RenderSink {
 	}
 
 	// All setup methods:
+	// These stay on the RenderSink interface, but the logic itself now lives in core's Screens so
+	// that non-JavaFX front-ends can open the same screens. Kept as thin delegates.
+	@Override
 	public void openOptions() {
-		if(!GameState.game.isStarted()) {
-			return;
-		}
-		
-		if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OPTIONS) {
-			GameState.game.restoreSavedContent(false);
-			
-		} else {
-			DialogueNodeType currentDialogueNodeType = GameState.game.getCurrentDialogueNode().getDialogueNodeType();
-			if (currentDialogueNodeType == DialogueNodeType.NORMAL
-					|| currentDialogueNodeType == DialogueNodeType.OCCUPANT_MANAGEMENT // This was commented out at some point, which was causing issues with the opening/closing of the main menu screen.
-					|| (!GameState.game.isInNewWorld() && currentDialogueNodeType != DialogueNodeType.CHARACTERS_PRESENT)) {
-				GameState.game.saveDialogueNode();
-			}
-			
-			GameState.game.setContent(new Response("", "", OptionsDialogue.MENU));
-		}
+		Screens.openOptions();
 	}
 
+	@Override
 	public boolean isPhoneDisabled() {
-		return !GameState.game.isStarted() || !GameState.game.isInNewWorld() || GameState.game.getCurrentDialogueNode().isPhoneDisabled();
+		return Screens.isPhoneDisabled();
 	}
-	
+
+	@Override
 	public void openPhone() {
-		openPhone(PhoneDialogue.MENU);
+		Screens.openPhone();
 	}
-	
+
+	@Override
 	public void openPhone(DialogueNode toDialogue) {
-		if(isPhoneDisabled() && toDialogue!=PositioningMenu.POSITIONING_MENU && GameState.game.getCurrentDialogueNode()!=PositioningMenu.POSITIONING_MENU) {
-			return;
-		}
-		
-		if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.PHONE) {
-			GameState.game.restoreSavedContent(false);
-			
-		} else {
-			if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.NORMAL
-//					|| GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OCCUPANT_MANAGEMENT
-					) {
-				GameState.game.saveDialogueNode();
-			}
-			
-			Pathing.initPathingVariables();
-			if(toDialogue.equals(PhoneDialogue.MAP)) {
-				PhoneDialogue.worldTypeMap = GameState.game.getPlayer().getWorldLocation();
-			}
-			GameState.game.setContent(new Response("", "", toDialogue));
-		}
+		Screens.openPhone(toDialogue);
 	}
 
+	@Override
 	public boolean isInventoryDisabled() {
-		if(GameState.game.isBadEnd()) {
-			return false;
-		}
-		
-		if(!GameState.game.isInNewWorld() && !GameState.game.isInSex()) {
-			return true;
-		}
-		if(GameState.game.isInSex() && GameState.game.getCurrentDialogueNode().isInventoryForcedDisabledInSex()) {
-			return true;
-		}
-		
-		if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.INVENTORY
-				|| GameState.game.isInCombat()
-				/*|| GameState.game.isInSex()*/) {
-			return false;
-			
-		} else if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OPTIONS || GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.PHONE) {
-			if(GameState.game.getSavedDialogueNode()==null) {
-				return true;
-			}
-			return GameState.game.getSavedDialogueNode().isInventoryDisabled();
-			
-		} else {
-			return GameState.game.getCurrentDialogueNode().isInventoryDisabled();
-		}
+		return Screens.isInventoryDisabled();
 	}
 
+	@Override
 	public void openInventory() {
-		if(!GameState.game.isInNewWorld() && !GameState.game.isInSex()) {
-			//openInventory(null, InventoryInteraction.CHARACTER_CREATION);
-			
-		} else if(GameState.game.isInCombat()) {
-			if(GameState.combat.getTargetedCombatant().isPlayer()) {
-				openInventory((NPC) GameState.combat.getEnemies(GameState.game.getPlayer()).get(0), InventoryInteraction.COMBAT);
-			} else {
-				openInventory((NPC) GameState.combat.getTargetedCombatant(), InventoryInteraction.COMBAT);
-			}
-			
-		} else if(GameState.game.isInSex()) {
-			if(isInventoryDisabled()) {
-				return;
-			}
-			openInventory(
-					GameState.sex.isMasturbation()
-						?null
-						:(NPC) GameState.sex.getTargetedPartner(GameState.game.getPlayer()),
-					InventoryInteraction.SEX);
-			
-		} else if(GameState.game.getDialogueFlags().getManagementCompanion() != null) {
-			openInventory(GameState.game.getDialogueFlags().getManagementCompanion(), InventoryInteraction.FULL_MANAGEMENT);
-			
-		} else {
-			openInventory(null, InventoryInteraction.FULL_MANAGEMENT);
-		}
+		Screens.openInventory();
 	}
-	
+
+	@Override
 	public void openInventory(NPC npc, InventoryInteraction interaction) {
-		if(!GameState.game.isStarted()) {
-			return;
-		}
-
-		RenderingEngine.setPageLeft(0);
-		RenderingEngine.setPageRight(0);
-		
-		InventoryDialogue.setBuyback(false);
-		InventoryDialogue.setInventoryNPC(npc);
-		InventoryDialogue.setNPCInventoryInteraction(interaction);
-		
-		if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.INVENTORY) {
-			if(GameState.game.getDialogueFlags().getManagementCompanion() != null) {
-				GameState.game.setContent(new Response("", "", CompanionManagement.getCoreNode()) {
-					@Override
-					public void effects() {
-						GameState.game.setResponseTab(CompanionManagement.getDefaultResponseTab());
-						if(CompanionManagement.getCoreNode()==OccupantManagementDialogue.SLAVE_LIST) {
-							CompanionManagement.initManagement(null, 0, null);
-						}
-					}
-				});
-				
-			} else {
-				GameState.game.restoreSavedContent(GameState.game.getDialogueFlags().getManagementCompanion() != null
-//						|| GameState.game.getSavedDialogueNode().getDialogueNodeType()==DialogueNodeType.OCCUPANT_MANAGEMENT
-						);
-			}
-
-		} else if(!isInventoryDisabled() || npc!=null) {
-			if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.NORMAL
-//					|| GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OCCUPANT_MANAGEMENT
-					) {
-				GameState.game.saveDialogueNode();
-			}
-			
-			if(npc!=null) {
-				npc.sortInventory();
-			} else {
-				GameState.game.getPlayerCell().getInventory().sortInventory();
-			}
-			
-			GameState.game.setContent(new Response("", "", InventoryDialogue.INVENTORY_MENU));
-		}
+		Screens.openInventory(npc, interaction);
 	}
 
+	@Override
 	public void openCharactersPresent() {
-		openCharactersPresent(null);
+		Screens.openCharactersPresent();
 	}
-	
+
+	@Override
 	public void openCharactersPresent(GameCharacter characterViewed) {
-		if(!GameState.game.isStarted()) {
-			return;
-		}
-		GameState.game.getDialogueFlags().setFlag(DialogueFlagValue.coveringChangeListenersRequired, true);
-		if(characterViewed!=null && characterViewed != CharactersPresentDialogue.characterViewed) {
-			if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.NORMAL
-//					|| GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OCCUPANT_MANAGEMENT
-					) {
-				GameState.game.saveDialogueNode();
-			}
-			
-			CharactersPresentDialogue.resetContent(characterViewed);
-			GameState.game.setContent(new Response("", "", CharactersPresentDialogue.MENU));
-			
-		} else {
-			if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.CHARACTERS_PRESENT) {
-				GameState.game.restoreSavedContent(false);
-				
-			} else if (!GameState.game.getCharactersPresent().isEmpty()) {
-				if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.NORMAL
-//						|| GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.OCCUPANT_MANAGEMENT
-						) {
-					GameState.game.saveDialogueNode();
-				}
-				
-				CharactersPresentDialogue.resetContent(characterViewed);
-				GameState.game.setContent(new Response("", "", CharactersPresentDialogue.MENU));
-			}
-		}
+		Screens.openCharactersPresent(characterViewed);
 	}
-	
+
+	public void zoomMap() {
+		Screens.zoomMap();
+	}
+
 	/**
 	 * Sets up buttons and hotkeys.
 	 */
@@ -1201,11 +1057,6 @@ public class MainController implements Initializable, RenderSink {
 	
 	// Buttons:
 	static ButtonCopyDialogueEventListener copyDialogueButtonListener = new ButtonCopyDialogueEventListener();
-	static ButtonCharactersEventListener charactersPresentButtonListener = new ButtonCharactersEventListener();
-	static ButtonInventoryEventHandler inventoryButtonListener = new ButtonInventoryEventHandler();
-	static ButtonJournalEventListener journalButtonListener = new ButtonJournalEventListener();
-	static ButtonMainMenuEventListener menuButtonListener = new ButtonMainMenuEventListener();
-	static ButtonZoomEventListener zoomButtonListener = new ButtonZoomEventListener();
 	
 	// Map movement:
 	private ButtonMoveNorthEventListener moveNorthListener = new ButtonMoveNorthEventListener();
@@ -1938,144 +1789,60 @@ public class MainController implements Initializable, RenderSink {
 	private void manageButtonLeftListeners() {
 		documentButtonsLeft = (Document) webEngineButtonsLeft.executeScript("document");
 		EventListenerDataMap.put(documentButtonsLeft, new ArrayList<>());
-		
-		KeyCodeWithModifiers hotKey;
-		if(((EventTarget) documentButtonsLeft.getElementById("mainMenu"))!=null) {
-			addEventListener(documentButtonsLeft, "mainMenu", "click", menuButtonListener, true);
-			MainController.addEventListener(documentButtonsLeft, "mainMenu", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsLeft, "mainMenu", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.MENU);
-			MainController.addEventListener(documentButtonsLeft, "mainMenu", "mouseenter", new TooltipInformationEventListener().setInformation("Main Menu"+(hotKey==null?"":" ("+hotKey.getFullName()+")"), ""), false);
-		}
-		if(((EventTarget) documentButtonsLeft.getElementById("inventory"))!=null) {
-			addEventListener(documentButtonsLeft, "inventory", "click", inventoryButtonListener, true);
-			MainController.addEventListener(documentButtonsLeft, "inventory", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsLeft, "inventory", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.INVENTORY);
-			MainController.addEventListener(documentButtonsLeft, "inventory", "mouseenter", new TooltipInformationEventListener().setInformation("Inventory"+(hotKey==null?"":" ("+hotKey.getFullName()+")"), ""), false);
-		}
-		if(((EventTarget) documentButtonsLeft.getElementById("journal"))!=null) {
-			addEventListener(documentButtonsLeft, "journal", "click", journalButtonListener, true);
-			MainController.addEventListener(documentButtonsLeft, "journal", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsLeft, "journal", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.JOURNAL);
-			MainController.addEventListener(documentButtonsLeft, "journal", "mouseenter", new TooltipInformationEventListener().setInformation("Phone"+(hotKey==null?"":" ("+hotKey.getFullName()+")"), ""), false);
-		}
-		if(((EventTarget) documentButtonsLeft.getElementById("charactersPresent"))!=null) {
-			addEventListener(documentButtonsLeft, "charactersPresent", "click", charactersPresentButtonListener, true);
-			MainController.addEventListener(documentButtonsLeft, "charactersPresent", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsLeft, "charactersPresent", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.CHARACTERS);
-			MainController.addEventListener(documentButtonsLeft, "charactersPresent", "mouseenter", new TooltipInformationEventListener().setInformation("Characters Present"+(hotKey==null?"":" ("+hotKey.getFullName()+")"), ""), false);
-		}
-		if(((EventTarget) documentButtonsLeft.getElementById("mapZoom"))!=null) {
-			addEventListener(documentButtonsLeft, "mapZoom", "click", zoomButtonListener, true);
-			MainController.addEventListener(documentButtonsLeft, "mapZoom", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsLeft, "mapZoom", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.ZOOM);
-			MainController.addEventListener(documentButtonsLeft, "mapZoom", "mouseenter", new TooltipInformationEventListener().setInformation("Minimap Zoom"+(hotKey==null?"":" ("+hotKey.getFullName()+")"), ""), false);
-		}
+		// Only captures the fresh document. What each button does lives in core (ChromeButtons),
+		// which registers after this and calls back into bindingsChanged to attach the listeners.
 	}
-	
+
 	private void manageButtonRightListeners() {
 		documentButtonsRight = (Document) webEngineButtonsRight.executeScript("document");
 		EventListenerDataMap.put(documentButtonsRight, new ArrayList<>());
-		
-		boolean quickSaveAvailable = GameState.isQuickSaveAvailable() && GameState.game.isInNewWorld();
-		boolean quickLoadAvailable = GameState.isLoadGameAvailable(GameState.getQuickSaveName()) && GameState.game.isInNewWorld();
-		KeyCodeWithModifiers hotKey;
-		
-		if(((EventTarget) documentButtonsRight.getElementById("quickSave"))!=null) {
-			addEventListener(documentButtonsRight, "quickSave", "click", e -> {
-				GameState.quickSaveGame();
-			}, false);
-		
-			MainController.addEventListener(documentButtonsRight, "quickSave", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsRight, "quickSave", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.QUICKSAVE);
-			MainController.addEventListener(documentButtonsRight, "quickSave", "mouseenter", new TooltipInformationEventListener().setInformation(
-					quickSaveAvailable
-						?"[style.colourGood(Quick Save"+(hotKey==null?"":" ("+hotKey.getFullName()+")")+")]"
-						:"[style.colourBad(Quick Save"+(hotKey==null?"":" ("+hotKey.getFullName()+")")+")]",
-					"Either creates or "+(quickLoadAvailable?"[style.italicsBad(overrides)]":"")+" the save file with the name '"+GameState.getQuickSaveName()+"'."
-						+ (hotKey==null
-							?"<br/>There is no keyboard shortcut currently bound to this action."
-							:"<br/>You can also quick save by pressing the '"+hotKey.getFullName()+"' key.")
-						+ (quickSaveAvailable
-							?"<br/>[style.italicsGood(You can save the game in this scene!)]"
-							:"<br/>[style.italicsBad("+GameState.getQuickSaveUnavailabilityDescription()+")]")),
-					false);
-		}
-		
-		if(((EventTarget) documentButtonsRight.getElementById("quickLoad"))!=null) {
-			addEventListener(documentButtonsRight, "quickLoad", "click", e -> {
-				GameState.quickLoadGame();
-			}, false);
-		
-			MainController.addEventListener(documentButtonsRight, "quickLoad", "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsRight, "quickLoad", "mouseleave", MainController.hideTooltipListener, false);
-			hotKey = GameState.getProperties().hotkeyMapPrimary.get(KeyboardAction.QUICKLOAD);
-			MainController.addEventListener(documentButtonsRight, "quickLoad", "mouseenter", new TooltipInformationEventListener().setInformation(
-					quickLoadAvailable
-						?"[style.colourGood(Quick Load"+(hotKey==null?"":" ("+hotKey.getFullName()+")")+")]"
-						:"[style.colourBad(Quick Load"+(hotKey==null?"":" ("+hotKey.getFullName()+")")+")]",
-					"Loads the game file with the name '"+GameState.getQuickSaveName()+"'."
-						+(hotKey==null
-							?"<br/>There is no keyboard shortcut currently bound to this action."
-							:"<br/>You can also quick load by pressing the '"+hotKey.getFullName()+"' key.")
-						+(quickLoadAvailable
-							?"<br/>[style.italicsGood(Quick save file is detected for this character!)]"
-							:"<br/>[style.italicsBad(No quick save file detected for this character!)]")),
-					false);
-		}
-		
-		String id = "copyContent";
-		if(((EventTarget) documentButtonsRight.getElementById(id))!=null) {
-			MainController.addEventListener(documentButtonsRight, id, "click", copyDialogueButtonListener, false);
-			MainController.addEventListener(documentButtonsRight, id, "mousemove", moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsRight, id, "mouseleave", hideTooltipListener, false);
-			
+	}
 
-			MainController.addEventListener(documentButtonsRight, id, "mouseenter", new TooltipInformationEventListener().setInformation(
-					GameState.game.getCurrentDialogueNode().getLabel() == "" || GameState.game.getCurrentDialogueNode().getLabel() == null ? "-" : GameState.game.getCurrentDialogueNode().getLabel(),
-					"Click to copy the currently displayed dialogue to your clipboard. You can then paste the output into a text editor, save it as a <i>.html</i> file, then open that file in a browser to retain the game's formatting.<br/>"
-					+ "This scene was written by: <b>"+GameState.game.getCurrentDialogueNode().getAuthor()+"</b>",
-					80), false);
-			
+	/**
+	 * Attaches real DOM listeners for a panel's core-registered bindings.
+	 *
+	 * Deliberately mirrors what the hand-written registration used to do, including the
+	 * "does this element actually exist in the current content" guard and the capture flag,
+	 * both of which are load-bearing.
+	 */
+	@Override
+	public void bindingsChanged(Panel panel) {
+		Document doc = documentFor(panel);
+		if (doc == null) {
+			return;
 		}
-		
-		id = "exportCharacter";
-		if(((EventTarget) documentButtonsRight.getElementById(id))!=null) {
-			boolean exportAvailable = GameState.game.isStarted()
-					&& (GameState.game.getCurrentDialogueNode().equals(CharactersPresentDialogue.MENU)
-						|| GameState.game.getCurrentDialogueNode().equals(PhoneDialogue.CHARACTER_APPEARANCE)
-						|| GameState.game.getCurrentDialogueNode().equals(PhoneDialogue.CONTACTS_CHARACTER));
-			
-
-			MainController.addEventListener(documentButtonsRight, id, "mousemove", MainController.moveTooltipListener, false);
-			MainController.addEventListener(documentButtonsRight, id, "mouseleave", MainController.hideTooltipListener, false);
-			
-			if(exportAvailable) {
-				GameCharacter exportCharacter = GameState.game.getCurrentDialogueNode().equals(PhoneDialogue.CHARACTER_APPEARANCE)?GameState.game.getPlayer():CharactersPresentDialogue.characterViewed;
-				String name = "<span style='color:"+exportCharacter.getFemininity().getColour().toWebHexString()+";'>"+exportCharacter.getName(false)+"</span>";
-				MainController.addEventListener(documentButtonsRight, id, "click", e -> {
-					Game.exportCharacter(exportCharacter);
-					GameState.game.flashMessage(PresetColour.GENERIC_EXCELLENT, "Character Exported!");
-				}, false);
-				MainController.addEventListener(documentButtonsRight, id, "mouseenter", new TooltipInformationEventListener().setInformation(
-						"Export Character",
-						"Export "+name+" to the 'data/characters' folder. Exported characters can be imported at the auction block in Slaver Alley.",
-						48), false);
-				
-			} else {
-				MainController.addEventListener(documentButtonsRight, id, "mouseenter", new TooltipInformationEventListener().setInformation(
-						"Export Character",
-						"To export any character, including your own, you need to be viewing them in your phone's 'Characters Present' screen.",
-						48), false);
+		for (Ui.Binding binding : Ui.bindings(panel)) {
+			String id = binding.getId();
+			if (doc.getElementById(id) == null) {
+				continue;
+			}
+			if (binding.getClick() != null) {
+				ClickAction action = binding.getClick();
+				addEventListener(doc, id, "click", e -> action.run(), binding.isUseCapture());
+			}
+			InformationTooltip tooltip = binding.getTooltip();
+			if (tooltip != null) {
+				addEventListener(doc, id, "mousemove", MainController.moveTooltipListener, false);
+				addEventListener(doc, id, "mouseleave", MainController.hideTooltipListener, false);
+				addEventListener(doc, id, "mouseenter",
+						new TooltipInformationEventListener().setInformation(
+								tooltip.getTitle(), tooltip.getDescription(), tooltip.getDescriptionHeightOverride()),
+						false);
 			}
 		}
 	}
-	
+
+	private Document documentFor(Panel panel) {
+		switch (panel) {
+			case MAIN: return document;
+			case ATTRIBUTES: return documentAttributes;
+			case RIGHT: return documentRight;
+			case BUTTONS_LEFT: return documentButtonsLeft;
+			case BUTTONS_RIGHT: return documentButtonsRight;
+			default: return null;
+		}
+	}
+
 	private void manageAttributeListeners() {
 		documentAttributes = (Document) webEngineAttributes.executeScript("document");
 		EventListenerDataMap.put(documentAttributes, new ArrayList<>());
@@ -3182,15 +2949,6 @@ public class MainController implements Initializable, RenderSink {
 		RenderingEngine.ENGINE.renderAttributesPanelRight();
 	}
 
-	public void zoomMap() {
-		if (!GameState.game.getCurrentDialogueNode().isTravelDisabled()) {
-			RenderingEngine.setZoomedIn(!RenderingEngine.isZoomedIn());
-			
-			Main.mainController.updateUILeftPanel();
-			RenderingEngine.ENGINE.renderButtonsLeft();
-			RenderingEngine.ENGINE.renderButtonsRight();
-		}
-	}
 
 	private void moveTile(int xOffset, int yOffset) {
 		Vector2i location = GameState.game.getPlayer().getLocation();

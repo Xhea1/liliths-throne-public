@@ -59,6 +59,7 @@ import com.lilithsthrone.game.sex.SexAreaInterface;
 import com.lilithsthrone.game.sex.SexAreaOrifice;
 import com.lilithsthrone.game.sex.SexAreaPenetration;
 import com.lilithsthrone.game.sex.positions.slots.SexSlotGeneric;
+import com.lilithsthrone.controller.ChromeButtons;
 import com.lilithsthrone.main.GameState;
 import com.lilithsthrone.utils.Pathing;
 import com.lilithsthrone.utils.SizedStack;
@@ -2560,6 +2561,9 @@ public enum RenderingEngine {
 							+ (GameState.game.getCurrentDialogueNode().isTravelDisabled() ? "<div class='disabledLayer'></div>" : "")
 					+ "</div>"
 				+ "</div>");
+		// Bindings are registered here rather than by a front-end, so the buttons behave the
+		// same everywhere. Content is set first so desktop has a fresh document to bind against.
+		ChromeButtons.registerLeft();
 	}
 
 	public void renderButtonsRight() {
@@ -2606,6 +2610,7 @@ public enum RenderingEngine {
 //					+ "Author: "+GameState.game.getCurrentDialogueNode().getAuthor()
 //				+ "</div>"
 			);
+		ChromeButtons.registerRight();
 	}
 
 	public static boolean isZoomedIn() {

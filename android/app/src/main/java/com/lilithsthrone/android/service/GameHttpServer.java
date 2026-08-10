@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import android.util.Log;
 
 import com.lilithsthrone.android.render.HttpRenderSink;
+import com.lilithsthrone.controller.Panel;
+import com.lilithsthrone.controller.Ui;
 import com.lilithsthrone.game.Game;
 import com.lilithsthrone.game.combat.Combat;
 import com.lilithsthrone.game.dialogue.utils.OptionsDialogue;
@@ -64,11 +66,29 @@ public class GameHttpServer extends NanoHTTPD {
 				case "/":
 				case "/index.html":
 					bootGameIfNeeded();
-					return html(Pages.shell(sink.getMainContent()));
+					return html(Pages.shell(sink.getMainContent(), sink.getAttributePanelContent(),
+							sink.getRightPanelContent(), sink.getButtonsLeftContent(),
+							sink.getButtonsRightContent()));
 
 				case "/panel/main":
 					bootGameIfNeeded();
 					return html(sink.getMainContent());
+
+				case "/panel/attributes":
+					bootGameIfNeeded();
+					return html(sink.getAttributePanelContent());
+
+				case "/panel/right":
+					bootGameIfNeeded();
+					return html(sink.getRightPanelContent());
+
+				case "/panel/buttonsLeft":
+					bootGameIfNeeded();
+					return html(sink.getButtonsLeftContent());
+
+				case "/panel/buttonsRight":
+					bootGameIfNeeded();
+					return html(sink.getButtonsRightContent());
 
 				case "/css/webView_stylesheet.css":
 					return css("/com/lilithsthrone/res/css/webView_stylesheet.css");
@@ -93,9 +113,11 @@ public class GameHttpServer extends NanoHTTPD {
 	private String handleAction(IHTTPSession session) throws IOException, ResponseException {
 		Map<String, String> body = new java.util.HashMap<>();
 		session.parseBody(body);
+		String json = body.get("postData");
 		String id = session.getParameters().containsKey("id")
 				? session.getParameters().get("id").get(0)
-				: extractId(body.get("postData"));
+				: extractField(json, "id");
+		Panel panel = parsePanel(extractField(json, "panel"));
 
 		if (id == null || id.isEmpty()) {
 			Log.w(TAG, "action with no id");
@@ -110,18 +132,32 @@ public class GameHttpServer extends NanoHTTPD {
 		} else if (tab.matches()) {
 			GameState.game.setResponseTab(Integer.parseInt(tab.group(1)));
 			GameState.game.setContent(new com.lilithsthrone.game.dialogue.responses.Response("", "", GameState.game.getCurrentDialogueNode()));
-		} else {
-			Log.i(TAG, "unhandled id (not wired for this milestone): " + id);
+		} else if (!Ui.dispatch(panel, id)) {
+			// Not every id is bound yet; log rather than fail so the gap is visible while the
+			// remaining controllers are migrated into core.
+			Log.i(TAG, "unhandled id: " + id + " (panel " + panel + ")");
 		}
 		return sink.getMainContent();
 	}
 
-	/** Minimal extraction of {"id":"..."} without pulling in a JSON dependency. */
-	private static String extractId(String json) {
+	/** Which panel the click came from; ids are only unique within a panel. */
+	private static Panel parsePanel(String panel) {
+		if (panel == null) {
+			return Panel.MAIN;
+		}
+		try {
+			return Panel.valueOf(panel);
+		} catch (IllegalArgumentException e) {
+			return Panel.MAIN;
+		}
+	}
+
+	/** Minimal string-field extraction, to avoid pulling in a JSON dependency for two fields. */
+	private static String extractField(String json, String field) {
 		if (json == null) {
 			return null;
 		}
-		Matcher m = Pattern.compile("\"id\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
+		Matcher m = Pattern.compile("\"" + field + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
 		return m.find() ? m.group(1) : null;
 	}
 

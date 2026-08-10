@@ -9,7 +9,9 @@ android {
 
 	defaultConfig {
 		applicationId = "com.lilithsthrone.android"
-		minSdk = 26
+		// Android 14+ only: matches the target device, and guarantees the WebView supports the
+		// :has() selector the response-box layout relies on.
+		minSdk = 34
 		targetSdk = 34
 		versionCode = 1
 		versionName = "0.4.11.3"

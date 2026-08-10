@@ -7,6 +7,8 @@ import com.lilithsthrone.game.character.npc.NPC;
 import com.lilithsthrone.game.dialogue.DialogueNode;
 import com.lilithsthrone.game.dialogue.utils.InventoryInteraction;
 import com.lilithsthrone.game.settings.KeyboardAction;
+import com.lilithsthrone.controller.Panel;
+import com.lilithsthrone.controller.Screens;
 import com.lilithsthrone.rendering.RenderSink;
 import com.lilithsthrone.utils.colours.Colour;
 
@@ -116,39 +118,49 @@ public class HttpRenderSink implements RenderSink {
 		return null;
 	}
 
+	// The screen-switching logic lives in core's Screens, shared with desktop.
+
 	@Override
 	public void openInventory() {
-		Log.i(TAG, "openInventory not implemented for this milestone");
+		Screens.openInventory();
 	}
 
 	@Override
 	public void openInventory(NPC npc, InventoryInteraction interaction) {
-		Log.i(TAG, "openInventory(npc) not implemented for this milestone");
+		Screens.openInventory(npc, interaction);
 	}
 
 	@Override
 	public void openPhone() {
-		Log.i(TAG, "openPhone not implemented for this milestone");
+		Screens.openPhone();
 	}
 
 	@Override
 	public void openPhone(DialogueNode toDialogue) {
-		Log.i(TAG, "openPhone(node) not implemented for this milestone");
+		Screens.openPhone(toDialogue);
 	}
 
 	@Override
 	public void openCharactersPresent() {
-		Log.i(TAG, "openCharactersPresent not implemented for this milestone");
+		Screens.openCharactersPresent();
 	}
 
 	@Override
 	public void openCharactersPresent(GameCharacter characterViewed) {
-		Log.i(TAG, "openCharactersPresent(character) not implemented for this milestone");
+		Screens.openCharactersPresent(characterViewed);
 	}
 
 	@Override
 	public void openOptions() {
-		Log.i(TAG, "openOptions not implemented for this milestone");
+		Screens.openOptions();
+	}
+
+	/**
+	 * Nothing to do: this front-end has no live DOM to attach listeners to. Clicks arrive as ids
+	 * posted to /action and are looked up in Ui at that point.
+	 */
+	@Override
+	public void bindingsChanged(Panel panel) {
 	}
 
 	@Override
@@ -183,12 +195,12 @@ public class HttpRenderSink implements RenderSink {
 
 	@Override
 	public boolean isPhoneDisabled() {
-		return true;
+		return Screens.isPhoneDisabled();
 	}
 
 	@Override
 	public boolean isInventoryDisabled() {
-		return true;
+		return Screens.isInventoryDisabled();
 	}
 
 	@Override

@@ -97,6 +97,15 @@ public interface RenderSink {
 	void setFlashMessageText(String flashMessageText);
 
 	/**
+	 * Signals that {@link com.lilithsthrone.controller.Ui}'s bindings for a panel have been
+	 * rebuilt, so the front-end should apply them however it needs to.
+	 *
+	 * Desktop attaches real DOM listeners for each binding; a front-end that dispatches ids on
+	 * demand (e.g. over HTTP) has nothing to do and may no-op.
+	 */
+	void bindingsChanged(com.lilithsthrone.controller.Panel panel);
+
+	/**
 	 * Called once world generation finishes and a new game's initial state is ready.
 	 * Desktop uses this to redo its FXML/Scene setup (mirroring the pre-split behaviour);
 	 * an HTTP-backed sink has no equivalent "scene" to rebuild and may no-op.

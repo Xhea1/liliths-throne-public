@@ -13,7 +13,8 @@ final class Pages {
 	private Pages() {
 	}
 
-	static String shell(String mainContent) {
+	static String shell(String mainContent, String attributes, String right,
+			String buttonsLeft, String buttonsRight) {
 		return "<!doctype html><html><head>"
 				+ "<meta charset='utf-8'>"
 				// The game's CSS sizes everything in px against a ~1280px desktop window. Declaring
@@ -27,8 +28,16 @@ final class Pages {
 				+ "<style>" + MOBILE_OVERRIDES + "</style>"
 				+ "</head><body>"
 				+ "<div id='viewport'>"
-				+ "<div id='content'>" + mainContent + "</div>"
+				+ "<div id='panels'>"
+				+ "<div id='panel-attributes' class='sidepanel' data-panel='ATTRIBUTES'>" + attributes + "</div>"
+				+ "<div id='content' data-panel='MAIN'>" + mainContent + "</div>"
+				+ "<div id='panel-right' class='sidepanel' data-panel='RIGHT'>" + right + "</div>"
+				+ "</div>"
+				+ "<div id='chrome'>"
+				+ "<div id='panel-buttons-left' data-panel='BUTTONS_LEFT'>" + buttonsLeft + "</div>"
 				+ "<div id='actionbar'></div>"
+				+ "<div id='panel-buttons-right' data-panel='BUTTONS_RIGHT'>" + buttonsRight + "</div>"
+				+ "</div>"
 				+ "</div>"
 				+ "<script>" + SCRIPT + "</script>"
 				+ "</body></html>";
@@ -46,8 +55,18 @@ final class Pages {
 			// bottom. #RESPONSE_BOX is relocated into #actionbar by script after every render --
 			// see SCRIPT below for why that isn't done in CSS.
 			+ "#viewport{display:flex;flex-direction:column;height:100vh;overflow:hidden}"
-			+ "#content{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch}"
-			+ "#actionbar{flex:0 0 auto;background:#1a1a1a;border-top:1px solid #333}"
+			// Three columns above, chrome strip below. The side panels are narrow because the
+			// desktop layout gives them fixed pixel widths against a 1280px window.
+			+ "#panels{flex:1 1 auto;display:flex;min-height:0}"
+			+ "#content{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;min-width:0}"
+			+ ".sidepanel{flex:0 0 22%;overflow-y:auto;-webkit-overflow-scrolling:touch;"
+			+ "font-size:0.85em;background:#141414}"
+			+ ".sidepanel:empty{display:none}"
+			+ "#chrome{flex:0 0 auto;display:flex;align-items:stretch;"
+			+ "background:#1a1a1a;border-top:1px solid #333}"
+			+ "#actionbar{flex:1 1 auto;min-width:0}"
+			+ "#panel-buttons-left,#panel-buttons-right{flex:0 0 auto;display:flex;align-items:center}"
+			+ "#panel-buttons-left:empty,#panel-buttons-right:empty{display:none}"
 
 			// --- Response box (the game's action bar) -------------------------------------
 			// The engine always emits all 15 response slots plus both page-switcher arrows,
@@ -88,17 +107,34 @@ final class Pages {
 			+ "var slot=document.getElementById('actionbar');"
 			+ "if(bar&&slot){slot.innerHTML='';slot.appendChild(bar);}"
 			+ "}"
+			// Side panels are re-rendered by the engine every turn, so pull them after each action.
+			+ "function refreshPanels(){"
+			+ "[['/panel/attributes','panel-attributes'],"
+			+ "['/panel/right','panel-right'],"
+			+ "['/panel/buttonsLeft','panel-buttons-left'],"
+			+ "['/panel/buttonsRight','panel-buttons-right']]"
+			+ ".forEach(function(p){"
+			+ "fetch(p[0]).then(function(r){return r.text()})"
+			+ ".then(function(h){var el=document.getElementById(p[1]); if(el)el.innerHTML=h;});"
+			+ "});"
+			+ "}"
+			// Element ids are only unique within a panel, so tell the server which one was clicked.
+			+ "function panelOf(el){"
+			+ "var p=el.closest('[data-panel]');"
+			+ "return p?p.getAttribute('data-panel'):'MAIN';"
+			+ "}"
 			+ "relocateActionBar();"
 			+ "document.addEventListener('click',function(e){"
 			+ "var el=e.target.closest('[id]');"
 			+ "if(!el||!el.id)return;"
 			+ "fetch('/action',{method:'POST',headers:{'Content-Type':'application/json'},"
-			+ "body:JSON.stringify({id:el.id,type:'click'})})"
+			+ "body:JSON.stringify({id:el.id,type:'click',panel:panelOf(el)})})"
 			+ ".then(function(r){return r.text()})"
 			+ ".then(function(html){"
 			+ "document.getElementById('content').innerHTML=html;"
 			+ "relocateActionBar();"
 			+ "document.getElementById('content').scrollTop=0;"
+			+ "refreshPanels();"
 			+ "})"
 			+ ".catch(function(err){console.error('action failed',err)});"
 			+ "});";
