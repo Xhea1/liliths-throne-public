@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.controller.UiInput;
+
 import com.lilithsthrone.utils.storage.Storage;
 
 import java.io.File;
@@ -613,8 +615,7 @@ public class EnchantmentDialogue {
 					return new Response("Save/Load", "Save/Load enchantment recipes.", ENCHANTMENT_SAVE_LOAD) {
 						@Override
 						public void effects() {
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-							EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+							EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 						}
 					};
 				
@@ -631,8 +632,7 @@ public class EnchantmentDialogue {
 	};
 	
 	private static void applyEnchantingEffect(int count) {
-		GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-		EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+		EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 		
 		for(int i=0; i<count; i++) {
 			craftAndApplyFullInventoryEffectsStack(ingredient, effects, i==count-1);
@@ -1275,8 +1275,7 @@ public class EnchantmentDialogue {
 					EnchantmentDialogue.setOutputName(EnchantingUtils.getPotionName(EnchantmentDialogue.getIngredient(), EnchantmentDialogue.getEffects()));
 				} else {
 					if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-						GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-						EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+						EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 					}
 				}
 			}
@@ -1293,8 +1292,7 @@ public class EnchantmentDialogue {
 			EnchantmentDialogue.setOutputName(EnchantingUtils.getPotionName(EnchantmentDialogue.getIngredient(), EnchantmentDialogue.getEffects()));
 		} else {
 			if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-				GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-				EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+				EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 			}
 		}
 		
@@ -1310,8 +1308,7 @@ public class EnchantmentDialogue {
 				EnchantmentDialogue.setOutputName(EnchantingUtils.getPotionName(EnchantmentDialogue.getIngredient(), EnchantmentDialogue.getEffects()));
 			} else {
 				if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-					GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-					EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+					EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 				}
 			}
 		}
@@ -1326,8 +1323,7 @@ public class EnchantmentDialogue {
 	public static void setPrimaryMod(TFModifier primaryMod) {
 		EnchantmentDialogue.primaryMod = primaryMod;
 		if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -1338,8 +1334,7 @@ public class EnchantmentDialogue {
 	public static void setSecondaryMod(TFModifier secondaryMod) {
 		EnchantmentDialogue.secondaryMod = secondaryMod;
 		if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -1350,8 +1345,7 @@ public class EnchantmentDialogue {
 	public static void setPotency(TFPotency potency) {
 		EnchantmentDialogue.potency = potency;
 		if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -1362,8 +1356,7 @@ public class EnchantmentDialogue {
 	public static void setLimit(int limit) {
 		EnchantmentDialogue.limit = limit;
 		if(GameState.game.getCurrentDialogueNode().equals(EnchantmentDialogue.ENCHANTMENT_MENU)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			EnchantmentDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			EnchantmentDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 

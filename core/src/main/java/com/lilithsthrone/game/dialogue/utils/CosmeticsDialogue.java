@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.controller.UiInput;
+
 import com.lilithsthrone.utils.storage.Storage;
 
 import java.io.File;
@@ -482,8 +484,7 @@ public class CosmeticsDialogue {
 						public void effects() {
 							GameState.game.getTextStartStringBuilder().append(GameState.game.getPlayer().incrementMoney(-value));
 
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('tattoo_name').value;");
-							CharacterModificationUtils.tattoo.getWriting().setText(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+							CharacterModificationUtils.tattoo.getWriting().setText(UiInput.get("tattoo_name"));
 							CharacterModificationUtils.tattoo.setName(CharacterModificationUtils.tattoo.getType().getName());
 							GameState.game.getPlayer().addTattoo(CharacterModificationUtils.tattooInventorySlot, CharacterModificationUtils.tattoo);
 						}
@@ -519,8 +520,7 @@ public class CosmeticsDialogue {
 	public static String deleteConfirmationName = "";
 
 	public static void initTattooSaveLoadDialogue(DialogueNode returnToNodeFromTattooSaveLoad) {
-		GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('tattoo_name').value;");
-		CharacterModificationUtils.tattoo.getWriting().setText(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+		CharacterModificationUtils.tattoo.getWriting().setText(UiInput.get("tattoo_name"));
 		CharacterModificationUtils.tattoo.setName(CharacterModificationUtils.tattoo.getType().getName());
 		CosmeticsDialogue.returnToNodeFromTattooSaveLoad = returnToNodeFromTattooSaveLoad;
 	}

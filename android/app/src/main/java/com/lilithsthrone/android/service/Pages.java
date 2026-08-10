@@ -118,6 +118,15 @@ final class Pages {
 			+ ".then(function(h){var el=document.getElementById(p[1]); if(el)el.innerHTML=h;});"
 			+ "});"
 			+ "}"
+			// There is no live DOM on the server, so send the text fields' current values with the
+			// click; core reads them back through UiInput instead of scripting the page.
+			+ "function inputSnapshot(){"
+			+ "var out={};"
+			+ "document.querySelectorAll('input,textarea').forEach(function(el){"
+			+ "if(el.id)out[el.id]=el.value;"
+			+ "});"
+			+ "return out;"
+			+ "}"
 			// Element ids are only unique within a panel, so tell the server which one was clicked.
 			+ "function panelOf(el){"
 			+ "var p=el.closest('[data-panel]');"
@@ -128,7 +137,7 @@ final class Pages {
 			+ "var el=e.target.closest('[id]');"
 			+ "if(!el||!el.id)return;"
 			+ "fetch('/action',{method:'POST',headers:{'Content-Type':'application/json'},"
-			+ "body:JSON.stringify({id:el.id,type:'click',panel:panelOf(el)})})"
+			+ "body:JSON.stringify({id:el.id,type:'click',panel:panelOf(el),inputs:inputSnapshot()})})"
 			+ ".then(function(r){return r.text()})"
 			+ ".then(function(html){"
 			+ "document.getElementById('content').innerHTML=html;"

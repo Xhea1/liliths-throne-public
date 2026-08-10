@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.controller.UiInput;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2070,7 +2072,7 @@ public class DebugDialogue {
 				return new ResponseEffectsOnly("Parse!", "Parse the text you've entered."){
 					@Override
 					public void effects() {
-						rawText = (String) GameState.getRenderSink().executeScript("document.getElementById('parseInput').value");
+						rawText = UiInput.get("parseInput");
 						parsedText = UtilText.parse(rawText);
 						if(GameState.game.getCurrentDialogueNode()==PARSER) {
 							GameState.game.setContent(new Response("", "", PARSER));
@@ -2121,7 +2123,7 @@ public class DebugDialogue {
 						for(int i=1;i<=10;i++) {
 							UtilText.addSpecialParsingString("SP"+i, i==1);
 						}
-						xmlFileText = ((String) GameState.getRenderSink().executeScript("document.getElementById('xmlTest').value")).replaceAll("\u200b", "");
+						xmlFileText = UiInput.get("xmlTest").replaceAll("\u200b", "");
 						parsedText = GameState.game.runXmlTest(xmlFileText);
 					}
 				};

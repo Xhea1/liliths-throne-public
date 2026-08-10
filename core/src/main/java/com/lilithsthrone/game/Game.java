@@ -3881,7 +3881,7 @@ public class Game implements XMLSaving {
 		if(getCurrentDialogueNode()!=null
 				&& (node==getCurrentDialogueNode())) { // Added this line in v0.4.10.8 as otherwise every time this setContent() method is used, the scroll will not be reset to the top
 			if(!GameState.game.isInSex() || GameState.sex.getTurn()>1 || GameState.game.currentDialogueNode!=GameState.sex.SEX_DIALOGUE) { // First turn of sex should always reset to top
-				currentPosition =  (int) GameState.getRenderSink().executeScript("document.getElementById('content-block').scrollTop");
+				currentPosition = GameState.getRenderSink().getScrollTop();
 			}
 		}
 		
@@ -4242,7 +4242,7 @@ public class Game implements XMLSaving {
 		content=content.replaceAll("\r", "");
 		content=content.replaceAll("\n", "");
 		content=content.replaceAll("\"", "'");
-		GameState.getRenderSink().executeScript("document.getElementById('RESPONSE_BOX').innerHTML = \""+content+"\"");
+		GameState.getRenderSink().setResponseBoxContent(content);
 		GameState.getRenderSink().setResponseEventListeners();
 	}
 	
@@ -4645,26 +4645,7 @@ public class Game implements XMLSaving {
 	 * @param text Content of the message.
 	 */
 	public void flashMessage(Colour colour, String text){
-		try {
-			GameState.getRenderSink().executeScript(
-					"\"use strict\";"
-					+ "document.getElementById('bottom-text').innerHTML=\"<span style='color:"+colour.toWebHexString()+";'>"+text+"</span>\";"
-					+ "try{"
-						+ "timer;"
-					+ "} catch(e){"
-						+ "var timer=false;"
-					+ "}"
-					+ "if(!timer) {"
-						+ "document.getElementById('bottom-text').classList.add('demo');"
-						+ "timer = true;"
-						+ "timer = setTimeout(function(){"
-							+ "document.getElementById('bottom-text').classList.remove('demo');"
-							+ "timer = false;"
-						+ "}, 2000);"
-					+ "}");
-		} catch(Exception ex) {
-			System.err.println("var timer not found...");
-		}
+		GameState.getRenderSink().showFlashMessage(colour, text);
 	}
 
 	public void restoreSavedContent(boolean regenerateSceneDialogue) {

@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.places.dominion.shoppingArcade;
 
+import com.lilithsthrone.controller.UiInput;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -1017,8 +1019,7 @@ public class SuccubisSecrets {
 						public void effects() {
 							GameState.game.getTextStartStringBuilder().append(GameState.game.getPlayer().incrementMoney(-value));
 
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('tattoo_name').value;");
-							CharacterModificationUtils.tattoo.getWriting().setText(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+							CharacterModificationUtils.tattoo.getWriting().setText(UiInput.get("tattoo_name"));
 							CharacterModificationUtils.tattoo.setName(CharacterModificationUtils.tattoo.getType().getName());
 							GameState.game.getPlayer().addTattoo(CharacterModificationUtils.tattooInventorySlot, CharacterModificationUtils.tattoo);
 						}

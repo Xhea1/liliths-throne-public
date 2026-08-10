@@ -35,6 +35,13 @@ public class HttpRenderSink implements RenderSink {
 	private volatile String buttonsRightContent = "";
 	private volatile String tooltipContent = "";
 
+	/**
+	 * Text-field values as they were on the client when the current action was posted. There is no
+	 * live DOM to interrogate here, so the client sends a snapshot with each click and core reads
+	 * it back through getInputValue.
+	 */
+	private volatile java.util.Map<String, String> inputValues = java.util.Collections.emptyMap();
+
 	private volatile String flashMessageText = "";
 	private volatile Colour flashMessageColour;
 
@@ -109,15 +116,35 @@ public class HttpRenderSink implements RenderSink {
 	 * a scroll offset working with a sane default.
 	 */
 	@Override
-	public Object executeScript(String script) {
-		Log.d(TAG, "executeScript ignored (no live JS bridge): " + script);
+	public void setResponseBoxContent(String content) {
+		// The client re-fetches the whole main panel after each action, which already carries the
+		// response box, so there is nothing extra to push here.
+	}
+
+	/** Scroll position is the client's business; the engine only uses it to restore its own value. */
+	@Override
+	public int getScrollTop() {
 		return 0;
 	}
 
-	/** No server-side DOM: core call sites that read element state must be ported per-screen. */
 	@Override
-	public org.w3c.dom.Document getDocument() {
-		return null;
+	public void setScrollTop(int position) {
+	}
+
+	@Override
+	public void showFlashMessage(Colour colour, String text) {
+		flashMessageColour = colour;
+		flashMessageText = text == null ? "" : text;
+	}
+
+	/** Called by the HTTP server before dispatching an action. */
+	public void setInputValues(java.util.Map<String, String> values) {
+		inputValues = values == null ? java.util.Collections.emptyMap() : values;
+	}
+
+	@Override
+	public String getInputValue(String id) {
+		return inputValues.get(id);
 	}
 
 	// The screen-switching logic lives in core's Screens, shared with desktop.

@@ -3016,14 +3016,67 @@ public class MainController implements Initializable, RenderSink {
 		getTooltip().hide();
 	}
 
+	/**
+	 * Reads the field's value directly rather than via the old copy-into-a-hidden-element dance.
+	 * Equivalent, and strictly safer: the previous route assigned to innerHTML and read back
+	 * textContent, which mangles any value containing HTML-special characters.
+	 */
 	@Override
-	public Object executeScript(String script) {
-		return webEngine.executeScript(script);
+	public void setResponseBoxContent(String content) {
+		webEngine.executeScript("document.getElementById('RESPONSE_BOX').innerHTML = \""+content+"\"");
 	}
 
 	@Override
-	public org.w3c.dom.Document getDocument() {
-		return webEngine.getDocument();
+	public int getScrollTop() {
+		try {
+			return (int) webEngine.executeScript("document.getElementById('content-block').scrollTop");
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public void setScrollTop(int position) {
+		try {
+			webEngine.executeScript("document.getElementById('content-block').scrollTop = " + position + ";");
+		} catch (Exception e) {
+			// The element may not exist yet on the very first render; harmless.
+		}
+	}
+
+	@Override
+	public void showFlashMessage(com.lilithsthrone.utils.colours.Colour colour, String text) {
+		try {
+			webEngine.executeScript(
+					"\"use strict\";"
+					+ "document.getElementById('bottom-text').innerHTML=\"<span style='color:"+colour.toWebHexString()+";'>"+text+"</span>\";"
+					+ "try{"
+						+ "timer;"
+					+ "} catch(e){"
+						+ "var timer=false;"
+					+ "}"
+					+ "if(!timer) {"
+						+ "document.getElementById('bottom-text').classList.add('demo');"
+						+ "timer = true;"
+						+ "timer = setTimeout(function(){"
+							+ "document.getElementById('bottom-text').classList.remove('demo');"
+							+ "timer = false;"
+						+ "}, 2000);"
+					+ "}");
+		} catch(Exception ex) {
+			System.err.println("var timer not found...");
+		}
+	}
+
+	@Override
+	public String getInputValue(String id) {
+		try {
+			Object value = webEngine.executeScript(
+					"(function(){var e=document.getElementById('" + id + "'); return e?e.value:null;})()");
+			return value == null ? "" : value.toString();
+		} catch (Exception e) {
+			return "";
+		}
 	}
 
 	@Override

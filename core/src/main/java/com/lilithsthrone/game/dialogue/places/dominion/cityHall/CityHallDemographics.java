@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.places.dominion.cityHall;
 
+import com.lilithsthrone.controller.UiInput;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -911,30 +913,28 @@ public class CityHallDemographics {
 		List<String> fieldsList = Util.newArrayListOfValues("nameMasculineInput", "nameAndrogynousInput", "nameFeminineInput");
 		List<String> namesList = new ArrayList<>();
 		for(String s : fieldsList) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldName').innerHTML=document.getElementById('"+s+"').value;");
-			if(GameState.getRenderSink().getDocument()!=null) {
-				if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() < 2
-						|| GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() > 32
-						|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().matches("[^\\[\\]\\.]+")) {
+			if(GameState.getRenderSink()!=null) {
+				if (UiInput.get(s).length() < 2
+						|| UiInput.get(s).length() > 32
+						|| !UiInput.get(s).matches("[^\\[\\]\\.]+")) {
 					unsuitableName = true;
 				} else {
 					unsuitableName = false;
-					namesList.add(GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent());
+					namesList.add(UiInput.get(s));
 				}
 			}
 		}
-		GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldSurname').innerHTML=document.getElementById('surnameInput').value;");
-		if(GameState.getRenderSink().getDocument()!=null) {
-			if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length()>=1
-					&& (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length() > 32
-							|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().matches("[^\\[\\]\\.]+"))) {
+		if(GameState.getRenderSink()!=null) {
+			if (UiInput.get("surnameInput").length()>=1
+					&& (UiInput.get("surnameInput").length() > 32
+							|| !UiInput.get("surnameInput").matches("[^\\[\\]\\.]+"))) {
 				unsuitableSurname = true;
 			} else {
 				unsuitableSurname = false;
 			}
 		}
 		
-		if(applyOffspringSurnames && GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length()<1) {
+		if(applyOffspringSurnames && UiInput.get("surnameInput").length()<1) {
 			unsuitableSurname = true;
 		}
 		
@@ -943,9 +943,9 @@ public class CityHallDemographics {
 			
 		} else {
 			GameState.game.getPlayer().setName(new NameTriplet(namesList.get(0), namesList.get(1), namesList.get(2)));
-			GameState.game.getPlayer().setSurname(GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent());
+			GameState.game.getPlayer().setSurname(UiInput.get("surnameInput"));
 			
-			if(applyOffspringSurnames && GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length()>=1) {
+			if(applyOffspringSurnames && UiInput.get("surnameInput").length()>=1) {
 				for(NPC npc : GameState.game.getAllNPCs()) {
 					GameCharacter mother = npc.getMother();
 					if(mother!=null) {

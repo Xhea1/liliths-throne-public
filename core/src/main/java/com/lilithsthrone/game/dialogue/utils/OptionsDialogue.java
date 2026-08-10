@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.controller.UiInput;
+
 import com.lilithsthrone.utils.storage.Storage;
 
 import java.io.File;
@@ -1045,13 +1047,13 @@ public class OptionsDialogue {
 					@Override
 					public void effects() {
 						for(GenderNames gn : GenderNames.values()) {
-							GameState.getProperties().genderNameMale.put(gn, ((String) GameState.getRenderSink().executeScript("document.getElementById('GENDER_NAME_MASCULINE_" + gn +"').value")).toLowerCase());
-							GameState.getProperties().genderNameNeutral.put(gn, ((String) GameState.getRenderSink().executeScript("document.getElementById('GENDER_NAME_ANDROGYNOUS_" + gn +"').value")).toLowerCase());
-							GameState.getProperties().genderNameFemale.put(gn, ((String) GameState.getRenderSink().executeScript("document.getElementById('GENDER_NAME_FEMININE_" + gn +"').value")).toLowerCase());
+							GameState.getProperties().genderNameMale.put(gn, UiInput.get("GENDER_NAME_MASCULINE_" + gn +"").toLowerCase());
+							GameState.getProperties().genderNameNeutral.put(gn, UiInput.get("GENDER_NAME_ANDROGYNOUS_" + gn +"").toLowerCase());
+							GameState.getProperties().genderNameFemale.put(gn, UiInput.get("GENDER_NAME_FEMININE_" + gn +"").toLowerCase());
 						}
 						for (GenderPronoun gp : GenderPronoun.values()) {
-							GameState.getProperties().genderPronounFemale.put(gp, ((String) GameState.getRenderSink().executeScript("document.getElementById('feminine_" + gp +"').value")).toLowerCase());
-							GameState.getProperties().genderPronounMale.put(gp, ((String) GameState.getRenderSink().executeScript("document.getElementById('masculine_" + gp +"').value")).toLowerCase());
+							GameState.getProperties().genderPronounFemale.put(gp, UiInput.get("feminine_" + gp +"").toLowerCase());
+							GameState.getProperties().genderPronounMale.put(gp, UiInput.get("masculine_" + gp +"").toLowerCase());
 						}
 						GameState.saveProperties();
 						GameState.game.flashMessage(PresetColour.GENERIC_GOOD, "Pronouns saved!");

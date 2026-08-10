@@ -118,6 +118,7 @@ public class GameHttpServer extends NanoHTTPD {
 				? session.getParameters().get("id").get(0)
 				: extractField(json, "id");
 		Panel panel = parsePanel(extractField(json, "panel"));
+		sink.setInputValues(extractInputs(json));
 
 		if (id == null || id.isEmpty()) {
 			Log.w(TAG, "action with no id");
@@ -150,6 +151,32 @@ public class GameHttpServer extends NanoHTTPD {
 		} catch (IllegalArgumentException e) {
 			return Panel.MAIN;
 		}
+	}
+
+	/**
+	 * Pulls the {@code "inputs":{...}} object out of the posted body: a flat map of element id to
+	 * current text, which stands in for the live DOM the desktop front-end can interrogate.
+	 */
+	private static Map<String, String> extractInputs(String json) {
+		Map<String, String> values = new java.util.HashMap<>();
+		if (json == null) {
+			return values;
+		}
+		Matcher object = Pattern.compile("\"inputs\"\\s*:\\s*\\{(.*?)\\}", Pattern.DOTALL).matcher(json);
+		if (!object.find()) {
+			return values;
+		}
+		Matcher entry = Pattern.compile("\"([^\"]+)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(object.group(1));
+		while (entry.find()) {
+			values.put(entry.group(1), unescape(entry.group(2)));
+		}
+		return values;
+	}
+
+	/** Reverses the escaping JSON.stringify applies to the field values. */
+	private static String unescape(String value) {
+		return value.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t")
+				.replace("\\\"", "\"").replace("\\\\", "\\");
 	}
 
 	/** Minimal string-field extraction, to avoid pulling in a JSON dependency for two fields. */

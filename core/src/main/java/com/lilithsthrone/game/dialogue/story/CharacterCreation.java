@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.story;
 
+import com.lilithsthrone.controller.UiInput;
+
 import com.lilithsthrone.utils.storage.Storage;
 
 import java.io.File;
@@ -750,23 +752,21 @@ public class CharacterCreation {
 						List<String> fieldsList = Util.newArrayListOfValues("nameMasculineInput", "nameAndrogynousInput", "nameFeminineInput");
 						List<String> namesList = new ArrayList<>();
 						for(String s : fieldsList) {
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldName').innerHTML=document.getElementById('"+s+"').value;");
-							if(GameState.getRenderSink().getDocument()!=null) {
-								if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() < 2
-										|| GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() > 32
-										|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().matches("[^\\[\\]\\.]+")) {
+							if(GameState.getRenderSink()!=null) {
+								if (UiInput.get(s).length() < 2
+										|| UiInput.get(s).length() > 32
+										|| !UiInput.get(s).matches("[^\\[\\]\\.]+")) {
 									unsuitableName = true;
 								} else {
 									unsuitableName = false;
-									namesList.add(GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent());
+									namesList.add(UiInput.get(s));
 								}
 							}
 						}
-						GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldSurname').innerHTML=document.getElementById('surnameInput').value;");
-						if(GameState.getRenderSink().getDocument()!=null) {
-							if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length()>=1
-									&& (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length() > 32
-											|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().matches("[^\\[\\]\\.]+"))) {
+						if(GameState.getRenderSink()!=null) {
+							if (UiInput.get("surnameInput").length()>=1
+									&& (UiInput.get("surnameInput").length() > 32
+											|| !UiInput.get("surnameInput").matches("[^\\[\\]\\.]+"))) {
 								unsuitableSurname = true;
 							} else {
 								unsuitableSurname = false;
@@ -777,7 +777,7 @@ public class CharacterCreation {
 							
 						} else {
 							GameState.game.getPlayer().setName(new NameTriplet(namesList.get(0), namesList.get(1), namesList.get(2)));
-							GameState.game.getPlayer().setSurname(GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent());
+							GameState.game.getPlayer().setSurname(UiInput.get("surnameInput"));
 
 							GameState.game.getPlayerCell().resetInventory();
 							GameState.game.getPlayer().moveToAdjacentMatchingCellType(false, PlaceType.MUSEUM_LOBBY);
@@ -791,18 +791,17 @@ public class CharacterCreation {
 				return new Response("Random", "Generate a random name based on your gender.", CHOOSE_NAME){
 					@Override
 					public void effects() {
-						GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldSurname').innerHTML=document.getElementById('surnameInput').value;");
-						if(GameState.getRenderSink().getDocument()!=null) {
-							if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length()>=1
-									&& (GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().length() > 16
-											|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent().matches("[^\\[\\]\\.]+")))
+						if(GameState.getRenderSink()!=null) {
+							if (UiInput.get("surnameInput").length()>=1
+									&& (UiInput.get("surnameInput").length() > 16
+											|| !UiInput.get("surnameInput").matches("[^\\[\\]\\.]+")))
 								unsuitableSurname = true;
 							else {
 								unsuitableSurname = false;
 							}
 						}
 						if(!unsuitableSurname) {
-							GameState.game.getPlayer().setSurname(GameState.getRenderSink().getDocument().getElementById("hiddenFieldSurname").getTextContent());
+							GameState.game.getPlayer().setSurname(UiInput.get("surnameInput"));
 						}
 
 						GameState.game.getPlayer().setName(Name.getRandomTriplet(Subspecies.HUMAN));
@@ -816,15 +815,14 @@ public class CharacterCreation {
 						List<String> fieldsList = Util.newArrayListOfValues("nameMasculineInput", "nameAndrogynousInput", "nameFeminineInput");
 						List<String> namesList = new ArrayList<>();
 						for(String s : fieldsList) {
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenFieldName').innerHTML=document.getElementById('"+s+"').value;");
-							if(GameState.getRenderSink().getDocument()!=null) {
-								if (GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() < 2
-										|| GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().length() > 16
-										|| !GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent().matches("[^\\[\\]\\.]+"))
+							if(GameState.getRenderSink()!=null) {
+								if (UiInput.get(s).length() < 2
+										|| UiInput.get(s).length() > 16
+										|| !UiInput.get(s).matches("[^\\[\\]\\.]+"))
 									unsuitableName = true;
 								else {
 									unsuitableName = false;
-									namesList.add(GameState.getRenderSink().getDocument().getElementById("hiddenFieldName").getTextContent());
+									namesList.add(UiInput.get(s));
 								}
 							}
 						}
@@ -1262,8 +1260,7 @@ public class CharacterCreation {
 							UtilText.parse(BodyChanging.getTarget(), "Add this tattoo."), CHOOSE_ADVANCED_APPEARANCE_TATTOOS) {
 						@Override
 						public void effects() {
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('tattoo_name').value;");
-							CharacterModificationUtils.tattoo.getWriting().setText(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+							CharacterModificationUtils.tattoo.getWriting().setText(UiInput.get("tattoo_name"));
 							CharacterModificationUtils.tattoo.setName(CharacterModificationUtils.tattoo.getType().getName());
 							BodyChanging.getTarget().addTattoo(CharacterModificationUtils.tattooInventorySlot, CharacterModificationUtils.tattoo);
 						}

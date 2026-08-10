@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.places.dominion.lilayashome;
 
+import com.lilithsthrone.controller.UiInput;
+
 import com.lilithsthrone.utils.storage.Storage;
 
 import java.io.File;
@@ -1991,8 +1993,7 @@ public class LilayaDressingRoomDialogue {
 //			setOutputName(EnchantingUtils.getPotionName(getSelectedItem(), getEffects()));
 //		} else {
 //			if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-//				GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-//				setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+////				setOutputName(UiInput.get("output_name"));
 //			}
 //		}
 	}
@@ -2157,8 +2158,7 @@ public class LilayaDressingRoomDialogue {
 	public static void setPrimaryMod(TFModifier primaryMod) {
 		LilayaDressingRoomDialogue.primaryMod = primaryMod;
 		if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			LilayaDressingRoomDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			LilayaDressingRoomDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -2169,8 +2169,7 @@ public class LilayaDressingRoomDialogue {
 	public static void setSecondaryMod(TFModifier secondaryMod) {
 		LilayaDressingRoomDialogue.secondaryMod = secondaryMod;
 		if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			LilayaDressingRoomDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			LilayaDressingRoomDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -2181,8 +2180,7 @@ public class LilayaDressingRoomDialogue {
 	public static void setPotency(TFPotency potency) {
 		LilayaDressingRoomDialogue.potency = potency;
 		if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			LilayaDressingRoomDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			LilayaDressingRoomDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -2193,8 +2191,7 @@ public class LilayaDressingRoomDialogue {
 	public static void setLimit(int limit) {
 		LilayaDressingRoomDialogue.limit = limit;
 		if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-			GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-			LilayaDressingRoomDialogue.setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+			LilayaDressingRoomDialogue.setOutputName(UiInput.get("output_name"));
 		}
 	}
 
@@ -2228,8 +2225,7 @@ public class LilayaDressingRoomDialogue {
 					setOutputName(EnchantingUtils.getPotionName(getSelectedItem(), getEffects()));
 				} else {
 					if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-						GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-						setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+						setOutputName(UiInput.get("output_name"));
 					}
 				}
 			}
@@ -2246,8 +2242,7 @@ public class LilayaDressingRoomDialogue {
 			setOutputName(EnchantingUtils.getPotionName(getSelectedItem(), getEffects()));
 		} else {
 			if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-				GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-				setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+				setOutputName(UiInput.get("output_name"));
 			}
 		}
 		
@@ -2263,8 +2258,7 @@ public class LilayaDressingRoomDialogue {
 				setOutputName(EnchantingUtils.getPotionName(getSelectedItem(), getEffects()));
 			} else {
 				if(GameState.game.getCurrentDialogueNode().equals(OUTFIT_EDITOR_ITEM_ENCHANT)) {
-					GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('output_name').value;");
-					setOutputName(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+					setOutputName(UiInput.get("output_name"));
 				}
 			}
 		}

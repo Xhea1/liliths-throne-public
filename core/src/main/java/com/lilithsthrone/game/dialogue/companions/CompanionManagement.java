@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.companions;
 
+import com.lilithsthrone.controller.UiInput;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1887,8 +1889,7 @@ public class CompanionManagement {
 						public void effects() {
 							GameState.game.getTextStartStringBuilder().append(GameState.game.getPlayer().incrementMoney(-value));
 
-							GameState.getRenderSink().executeScript("document.getElementById('hiddenPField').innerHTML=document.getElementById('tattoo_name').value;");
-							CharacterModificationUtils.tattoo.getWriting().setText(GameState.getRenderSink().getDocument().getElementById("hiddenPField").getTextContent());
+							CharacterModificationUtils.tattoo.getWriting().setText(UiInput.get("tattoo_name"));
 							CharacterModificationUtils.tattoo.setName(CharacterModificationUtils.tattoo.getType().getName());
 							BodyChanging.getTarget().addTattoo(CharacterModificationUtils.tattooInventorySlot, CharacterModificationUtils.tattoo);
 						}

@@ -1,7 +1,5 @@
 package com.lilithsthrone.rendering;
 
-import org.w3c.dom.Document;
-
 import com.lilithsthrone.game.character.npc.NPC;
 import com.lilithsthrone.game.character.GameCharacter;
 import com.lilithsthrone.game.dialogue.DialogueNode;
@@ -46,16 +44,27 @@ public interface RenderSink {
 
 	void hideTooltip();
 
-	/**
-	 * Escape hatch for the few remaining call sites that push raw JS at the main panel's
-	 * document (e.g. scroll-position bookkeeping) rather than going through one of the
-	 * setXContent methods above. Implementations that have no live script engine (e.g. a
-	 * remote HTML client) may no-op.
-	 */
-	Object executeScript(String script);
+	/** Replaces the response box's markup in place, without re-rendering the whole main panel. */
+	void setResponseBoxContent(String content);
 
-	/** The main panel's live DOM, for the call sites that need to read element state back out. */
-	Document getDocument();
+	/** Scroll offset of the main content, preserved across same-node re-renders. */
+	int getScrollTop();
+
+	void setScrollTop(int position);
+
+	/**
+	 * Shows a transient message over the main panel (the "Game saved!" style toast).
+	 * Front-ends are free to present this however suits them.
+	 */
+	void showFlashMessage(Colour colour, String text);
+
+	/**
+	 * Current text of an {@code <input>}/{@code <textarea>} on the rendered screen.
+	 *
+	 * Prefer {@link com.lilithsthrone.controller.UiInput#get} at call sites. Returning null or an
+	 * empty string is fine when the field isn't present.
+	 */
+	String getInputValue(String id);
 
 	void openInventory();
 
