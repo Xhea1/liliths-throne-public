@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.character;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -3532,7 +3534,7 @@ public abstract class GameCharacter implements XMLSaving {
 		
 		if(!folder.isEmpty()) {
 			if(!this.isUnique() || this.isPlayer()) {
-				File f = new File("data/images/"+GameState.game.getId()+"/characters/" + folder);
+				File f = Storage.data("images/"+GameState.game.getId()+"/characters/" + folder);
 				if(f.exists() && f.isDirectory()) {
 					Artwork art = new Artwork(this, f, Artwork.customArtist);
 					// Cull empty artwork lists
@@ -3545,9 +3547,9 @@ public abstract class GameCharacter implements XMLSaving {
 				for(Artist artist : Artwork.allArtists) {
 					File f;
 					if(this.isUnique()) {
-						f = new File("res/images/characters/" + folder + "/" + artist.getFolderName());
+						f = Storage.res("images/characters/" + folder + "/" + artist.getFolderName());
 					} else {
-						f = new File("data/images/"+GameState.game.getId()+"/characters/" + folder + "/" + artist.getFolderName());
+						f = Storage.data("images/"+GameState.game.getId()+"/characters/" + folder + "/" + artist.getFolderName());
 					}
 					if(f.exists() && f.isDirectory()) {
 						Artwork art = new Artwork(this, f, artist);

@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -932,7 +934,9 @@ public class UtilText {
 	 * Parses the tagged htmlContent from an xml file. If there is more than one htmlContent entry, it returns a random one.
 	 */
 	public static String parseFromXMLFile(List<ParserTag> parserTags, String folderPath, String pathName, String tag, List<GameCharacter> specialNPC) {
-		File file = new File(folderPath+System.getProperty("file.separator")+pathName+".xml");
+		// folderPath arrives as a working-directory-relative id such as "res/txt/"; Storage maps it
+		// onto wherever this platform keeps the resource tree.
+		File file = new File(Storage.res(folderPath), pathName+".xml");
 
 		List<String> strings = new ArrayList<>();
 		

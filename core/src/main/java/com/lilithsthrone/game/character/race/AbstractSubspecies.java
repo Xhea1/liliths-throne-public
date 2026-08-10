@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.character.race;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1404,7 +1406,7 @@ public abstract class AbstractSubspecies {
 	}
 	
 	public String getBookAuthor() {
-		File bookFile = new File("res/txt/characters/raceInfo.xml");
+		File bookFile = Storage.res("txt/characters/raceInfo.xml");
 		if(this.isFromExternalFile()) {
 			bookFile = getXMLBookFile();
 		}

@@ -39,6 +39,7 @@ import com.lilithsthrone.game.inventory.clothing.AbstractClothing;
 import com.lilithsthrone.game.inventory.clothing.DisplacementType;
 import com.lilithsthrone.main.GameState;
 import com.lilithsthrone.utils.colours.Colour;
+import com.lilithsthrone.utils.storage.Storage;
 
 import com.lilithsthrone.game.settings.LTKeyCode;
 import com.lilithsthrone.utils.colours.LTColor;
@@ -202,7 +203,7 @@ public class Util {
 	 * @return A map of Files with the author as the key, mapped to a map of ids to files (id is based on file name and folder path).
 	 */
 	public static Map<String, Map<String, File>> getExternalModFilesById(String containingFolderId, String filterFolderName, String filterPathName) {
-		File dir = new File("res/mods");
+		File dir = Storage.res("mods");
 		Map<String, Map<String, File>> returnMap = new HashMap<>();
 		
 		if(dir.exists() && dir.isDirectory()) {
@@ -236,7 +237,10 @@ public class Util {
 	 * @return A map of Files with the author as the key, mapped to a map of ids to files (id is based on file name and folder path).
 	 */
 	public static Map<String, Map<String, File>> getExternalFilesById(String containingFolderId, String filterFolderName, String filterPathName) {
-		File dir = new File(containingFolderId);
+		// Call sites pass working-directory-relative ids like "res/race". Resolving them through
+		// Storage keeps those call sites unchanged while letting each platform decide where the
+		// resource tree actually lives (next to the jar on desktop, private app storage on Android).
+		File dir = Storage.res(containingFolderId);
 		Map<String, Map<String, File>> returnMap = new HashMap<>();
 		
 		if(dir.exists() && dir.isDirectory()) {

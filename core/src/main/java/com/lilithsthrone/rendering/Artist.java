@@ -1,5 +1,7 @@
 package com.lilithsthrone.rendering;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.util.List;
 
@@ -43,7 +45,7 @@ public class Artist {
 	public int getArtworkCount() {
 		int artworkCount = 0;
 
-		File f = new File("res/images/characters/");
+		File f = Storage.res("images/characters/");
 		if(f.exists() && f.isDirectory()) {
 //			System.out.println("### "+this.folderName);
 			for(String npcFolderName : f.list()) {

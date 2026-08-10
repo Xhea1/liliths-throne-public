@@ -1,5 +1,7 @@
 package com.lilithsthrone.game;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -698,11 +700,14 @@ public class Properties {
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 			DOMSource source = new DOMSource(doc);
-			StreamResult result = new StreamResult("data/properties.xml");
-		
-			transformer.transform(source, result);
-		
-		} catch (TransformerException e) {
+			// Written through the storage layer's stream API rather than a File, because on
+			// Android the settings live in a user-chosen Storage Access Framework folder whose
+			// tree URI does not map to a filesystem path.
+			try (java.io.OutputStream out = Storage.get().createDataFile("properties.xml")) {
+				transformer.transform(source, new StreamResult(out));
+			}
+
+		} catch (TransformerException | java.io.IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -717,9 +722,8 @@ public class Properties {
 	
 	public void loadPropertiesFromXML(){
 		
-		if (new File("data/properties.xml").exists())
-			try {
-				File propertiesXML = new File("data/properties.xml");
+		if (Storage.get().dataFileExists("properties.xml"))
+			try (java.io.InputStream propertiesXML = Storage.get().openDataFile("properties.xml")) {
 				Document doc = GameState.getDocBuilder().parse(propertiesXML);
 				
 				// Cast magic:

@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -1572,7 +1574,7 @@ public class BodyChanging {
 	public static List<File> getSavedBodies() {
 		List<File> filesList = new ArrayList<>();
 		
-		File dir = new File("data/transformation_presets");
+		File dir = Storage.data("transformation_presets");
 		if (dir.isDirectory()) {
 			File[] directoryListing = dir.listFiles((path, name) -> name.endsWith(".xml"));
 			if (directoryListing != null) {
@@ -1667,10 +1669,10 @@ public class BodyChanging {
 		
 		Body body = getTarget().getBody();
 		
-		File dir = new File("data/");
+		File dir = Storage.data("");
 		dir.mkdir();
 
-		dir = new File("data/transformation_presets");
+		dir = Storage.data("transformation_presets");
 		dir.mkdir();
 
 		if (dir.isDirectory()) {
@@ -1711,7 +1713,7 @@ public class BodyChanging {
 			DOMSource source = new DOMSource(doc);
 			
 			String saveLocation = "data/transformation_presets/"+name+".xml";
-			StreamResult result = new StreamResult(saveLocation);
+			StreamResult result = new StreamResult(Storage.data(saveLocation));
 			
 			transformer.transform(source, result);
 			
@@ -1725,7 +1727,7 @@ public class BodyChanging {
 
 	public static Body loadBody(String name) {
 		if(isLoadBodyAvailable(name)) {
-			File file = new File("data/transformation_presets/"+name+".xml");
+			File file = Storage.data("transformation_presets/"+name+".xml");
 
 			if (file.exists()) {
 				try {
@@ -1749,7 +1751,7 @@ public class BodyChanging {
 	}
 	
 	public static boolean isLoadBodyAvailable(String name) {
-		File file = new File("data/transformation_presets/"+name+".xml");
+		File file = Storage.data("transformation_presets/"+name+".xml");
 
 		if(!file.exists()) {
 			return false;
@@ -1759,7 +1761,7 @@ public class BodyChanging {
 	}
 
 	public static void deleteBody(String name) {
-		File file = new File("data/transformation_presets/"+name+".xml");
+		File file = Storage.data("transformation_presets/"+name+".xml");
 
 		if (file.exists()) {
 			try {

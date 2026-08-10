@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -846,7 +848,7 @@ public class OptionsDialogue {
 			presets = new ArrayList<>();
 
 			// Load all text files in the folder as properties
-			File presetFolder = new File("res/keybinds");
+			File presetFolder = Storage.res("keybinds");
 			if (presetFolder.exists() && presetFolder.isDirectory()) {
 				for (File f : presetFolder.listFiles((dir, name) -> name.endsWith(".txt"))) {
 					try (FileInputStream input = new FileInputStream(f)) {
@@ -897,7 +899,7 @@ public class OptionsDialogue {
 			}
 
 			// Write properties to file
-			try (FileOutputStream output = new FileOutputStream("res/keybinds/custom" + index + ".txt")) {
+			try (FileOutputStream output = new FileOutputStream(Storage.res("keybinds/custom" + index + ".txt"))) {
 				preset.store(output, "");
 			} catch (IOException e) {
 				e.printStackTrace();

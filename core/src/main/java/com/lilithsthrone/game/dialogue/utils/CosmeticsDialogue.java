@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -625,7 +627,7 @@ public class CosmeticsDialogue {
 	public static List<File> getSavedTattoos() {
 		List<File> filesList = new ArrayList<>();
 		
-		File dir = new File("data/tattoos");
+		File dir = Storage.data("tattoos");
 		if (dir.isDirectory()) {
 			File[] directoryListing = dir.listFiles((path, name) -> name.endsWith(".xml"));
 			if (directoryListing != null) {
@@ -721,10 +723,10 @@ public class CosmeticsDialogue {
 			return;
 		}
 		
-		File dir = new File("data/");
+		File dir = Storage.data("");
 		dir.mkdir();
 
-		dir = new File("data/tattoos");
+		dir = Storage.data("tattoos");
 		dir.mkdir();
 
 		if (dir.isDirectory()) {
@@ -772,7 +774,7 @@ public class CosmeticsDialogue {
 			DOMSource source = new DOMSource(doc);
 			
 			String saveLocation = "data/tattoos/"+name+".xml";
-			StreamResult result = new StreamResult(saveLocation);
+			StreamResult result = new StreamResult(Storage.data(saveLocation));
 			
 			transformer.transform(source, result);
 			
@@ -788,7 +790,7 @@ public class CosmeticsDialogue {
 
 	public static Tattoo loadTattoo(String name) {
 		if (isLoadTattooAvailable(name)) {
-			File file = new File("data/tattoos/"+name+".xml");
+			File file = Storage.data("tattoos/"+name+".xml");
 
 			if (file.exists()) {
 				try {
@@ -810,7 +812,7 @@ public class CosmeticsDialogue {
 	}
 	
 	public static boolean isLoadTattooAvailable(String name) {
-		File file = new File("data/tattoos/"+name+".xml");
+		File file = Storage.data("tattoos/"+name+".xml");
 
 		if(!file.exists()) {
 			return false;
@@ -820,7 +822,7 @@ public class CosmeticsDialogue {
 	}
 
 	public static void deleteTattoo(String name) {
-		File file = new File("data/tattoos/"+name+".xml");
+		File file = Storage.data("tattoos/"+name+".xml");
 
 		if (file.exists()) {
 			try {

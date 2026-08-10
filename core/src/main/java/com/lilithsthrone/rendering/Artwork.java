@@ -1,5 +1,7 @@
 package com.lilithsthrone.rendering;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ public class Artwork {
 		
 		customArtist = new Artist("Custom", PresetColour.BASE_GREY, "custom", new ArrayList<>());
 		
-		File dir = new File("res/images/characters");
+		File dir = Storage.res("images/characters");
 		
 		if(dir.exists()) {
 			FilenameFilter textFilter = (dir1, name)->name.toLowerCase().endsWith(".xml");

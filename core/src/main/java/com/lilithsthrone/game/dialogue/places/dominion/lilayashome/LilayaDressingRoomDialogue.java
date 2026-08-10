@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.places.dominion.lilayashome;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -433,7 +435,7 @@ public class LilayaDressingRoomDialogue {
 	public static List<File> getSavedOutfits() {
 		List<File> filesList = new ArrayList<>();
 		
-		File dir = new File("data/outfits");
+		File dir = Storage.data("outfits");
 		if(dir.isDirectory()) {
 			File[] directoryListing = dir.listFiles((path, name) -> name.endsWith(".xml"));
 			if(directoryListing!=null) {
@@ -497,10 +499,10 @@ public class LilayaDressingRoomDialogue {
 			return;
 		}
 		
-		File dir = new File("data/");
+		File dir = Storage.data("");
 		dir.mkdir();
 
-		dir = new File("data/outfits");
+		dir = Storage.data("outfits");
 		dir.mkdir();
 
 		if(dir.isDirectory()) {
@@ -541,7 +543,7 @@ public class LilayaDressingRoomDialogue {
 			DOMSource source = new DOMSource(doc);
 			
 			String saveLocation = "data/outfits/"+name+".xml";
-			StreamResult result = new StreamResult(saveLocation);
+			StreamResult result = new StreamResult(Storage.data(saveLocation));
 			
 			transformer.transform(source, result);
 			
@@ -557,7 +559,7 @@ public class LilayaDressingRoomDialogue {
 
 	public static Outfit loadOutfit(String name) {
 		if(isLoadOutfitAvailable(name)) {
-			File file = new File("data/outfits/"+name+".xml");
+			File file = Storage.data("outfits/"+name+".xml");
 
 			if(file.exists()) {
 				try {
@@ -583,7 +585,7 @@ public class LilayaDressingRoomDialogue {
 	}
 	
 	public static boolean isLoadOutfitAvailable(String name) {
-		File file = new File("data/outfits/"+name+".xml");
+		File file = Storage.data("outfits/"+name+".xml");
 
 		if(!file.exists()) {
 			return false;
@@ -605,10 +607,10 @@ public class LilayaDressingRoomDialogue {
 			return false;
 		}
 
-		File dir = new File("data/");
+		File dir = Storage.data("");
 		dir.mkdir();
 
-		dir = new File("data/outfits");
+		dir = Storage.data("outfits");
 		dir.mkdir();
 
 		if(dir.isDirectory()) {
@@ -628,7 +630,7 @@ public class LilayaDressingRoomDialogue {
 	}
 	
 	public static void deleteOutfit(String name) {
-		File file = new File("data/outfits/"+name+".xml");
+		File file = Storage.data("outfits/"+name+".xml");
 
 		if(file.exists()) {
 			try {

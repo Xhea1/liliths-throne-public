@@ -526,7 +526,10 @@ public class GameState {
 	 */
 	public static void initProperties() {
 		Storage.get().ensureDirectoriesExist();
-		if (Storage.get().propertiesFile().exists()) {
+		// Existence is checked through the storage layer rather than propertiesFile(), because on
+		// Android the settings may live in a Storage Access Framework folder that has no
+		// corresponding java.io.File path.
+		if (Storage.get().dataFileExists("properties.xml")) {
 			try {
 				properties = new Properties();
 				properties.loadPropertiesFromXML();

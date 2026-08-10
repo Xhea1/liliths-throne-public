@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.story;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleEntry;
@@ -1410,7 +1412,7 @@ public class CharacterCreation {
 	public static String getCheckingClothingDescription() {
 		StringBuilder sb = new StringBuilder();
 
-		File dir = new File("res/");
+		File dir = Storage.res("");
 		if(!dir.exists()) {
 			sb.append("<p style='text-align:center;'>"
 						+ "[style.italicsBad(The game cannot read the 'res' folder, and as such, vital items of clothing will be missing! Please refer to the 'MISSING FOLDERS' section of the README.txt before continuing!)]"

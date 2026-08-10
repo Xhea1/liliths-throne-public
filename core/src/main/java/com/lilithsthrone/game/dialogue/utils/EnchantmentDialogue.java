@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.dialogue.utils;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -925,7 +927,7 @@ public class EnchantmentDialogue {
 	public static List<File> getSavedEnchants() {
 		List<File> filesList = new ArrayList<>();
 		
-		File dir = new File("data/enchantments");
+		File dir = Storage.data("enchantments");
 		if (dir.isDirectory()) {
 			File[] directoryListing = dir.listFiles((path, name) -> name.endsWith(".xml"));
 			if (directoryListing != null) {
@@ -1046,10 +1048,10 @@ public class EnchantmentDialogue {
 			return;
 		}
 		
-		File dir = new File("data/");
+		File dir = Storage.data("");
 		dir.mkdir();
 
-		dir = new File("data/enchantments");
+		dir = Storage.data("enchantments");
 		dir.mkdir();
 
 		if (dir.isDirectory()) {
@@ -1120,7 +1122,7 @@ public class EnchantmentDialogue {
 			DOMSource source = new DOMSource(doc);
 			
 			String saveLocation = "data/enchantments/"+name+".xml";
-			StreamResult result = new StreamResult(saveLocation);
+			StreamResult result = new StreamResult(Storage.data(saveLocation));
 			
 			transformer.transform(source, result);
 			
@@ -1136,7 +1138,7 @@ public class EnchantmentDialogue {
 
 	public static LoadedEnchantment loadEnchant(String name) {
 		if (isLoadEnchantAvailable(name)) { // ????????????? you just repeat the check below immediately afterwards...
-			File file = new File("data/enchantments/"+name+".xml");
+			File file = Storage.data("enchantments/"+name+".xml");
 
 			if (file.exists()) {
 				try {
@@ -1181,7 +1183,7 @@ public class EnchantmentDialogue {
 	}
 	
 	public static boolean isLoadEnchantAvailable(String name) {
-		File file = new File("data/enchantments/"+name+".xml");
+		File file = Storage.data("enchantments/"+name+".xml");
 
 		if(!file.exists()) {
 			return false;
@@ -1191,7 +1193,7 @@ public class EnchantmentDialogue {
 	}
 
 	public static void deleteEnchant(String name) {
-		File file = new File("data/enchantments/"+name+".xml");
+		File file = Storage.data("enchantments/"+name+".xml");
 
 		if (file.exists()) {
 			try {

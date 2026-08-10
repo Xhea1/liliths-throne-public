@@ -1,5 +1,7 @@
 package com.lilithsthrone.game.character;
 
+import com.lilithsthrone.utils.storage.Storage;
+
 import java.io.File;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
@@ -187,23 +189,23 @@ public class CharacterUtils {
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 			DOMSource source = new DOMSource(doc);
 			
-			File dir = new File("data/");
+			File dir = Storage.data("");
 			dir.mkdir();
 			
-			File dirCharacter = new File("data/characters/");
+			File dirCharacter = Storage.data("characters/");
 			dirCharacter.mkdir();
 			
 			int saveNumber = 0;
 			String saveLocation = "data/characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+".xml";
-			if(new File("data/characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+".xml").exists())
+			if(Storage.data("characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+".xml").exists())
 				saveLocation = "data/characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+"("+saveNumber+").xml";
 
-			while(new File("data/characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+"("+saveNumber+").xml").exists()) {
+			while(Storage.data("characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+"("+saveNumber+").xml").exists()) {
 				saveNumber++;
 				saveLocation = "data/characters/"+character.getName(false)+"_day"+GameState.game.getDayNumber()+"("+saveNumber+").xml";
 			}
 			
-			StreamResult result = new StreamResult(saveLocation);
+			StreamResult result = new StreamResult(Storage.data(saveLocation));
 			
 			transformer.transform(source, result);
 		
