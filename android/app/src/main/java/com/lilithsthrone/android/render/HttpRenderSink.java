@@ -9,7 +9,9 @@ import com.lilithsthrone.game.dialogue.utils.InventoryInteraction;
 import com.lilithsthrone.game.settings.KeyboardAction;
 import com.lilithsthrone.controller.Panel;
 import com.lilithsthrone.controller.Screens;
+import com.lilithsthrone.main.GameState;
 import com.lilithsthrone.rendering.RenderSink;
+import com.lilithsthrone.rendering.RenderingEngine;
 import com.lilithsthrone.utils.colours.Colour;
 
 /**
@@ -165,12 +167,19 @@ public class HttpRenderSink implements RenderSink {
 
 	@Override
 	public void updateUILeftPanel() {
-		// The client re-fetches panels after each action; nothing to push.
+		if (GameState.game.isRenderAttributesSection()) {
+			RenderingEngine.ENGINE.renderAttributesPanelLeft();
+		}
+		RenderingEngine.updateUIButtons();
 	}
 
+	/**
+	 * Regenerates the side panels and button strips into the buffers above; the client pulls them
+	 * from /panel/* after each action.
+	 */
 	@Override
 	public void updateUI() {
-		// As above.
+		RenderingEngine.updateUI();
 	}
 
 	@Override

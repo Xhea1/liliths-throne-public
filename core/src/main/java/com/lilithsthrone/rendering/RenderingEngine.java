@@ -2513,6 +2513,26 @@ public enum RenderingEngine {
 		}
 	}
 
+	/**
+	 * Re-renders the persistent panels around the main content.
+	 *
+	 * Lived in desktop's MainController, but it is just "which panels need regenerating", which
+	 * every front-end needs -- without it a non-JavaFX front-end never draws its side panels or
+	 * registers the chrome buttons at all.
+	 */
+	public static void updateUI() {
+		if (GameState.game.isRenderAttributesSection()) {
+			ENGINE.renderAttributesPanelLeft();
+			ENGINE.renderAttributesPanelRight();
+		}
+		updateUIButtons();
+	}
+
+	public static void updateUIButtons() {
+		ENGINE.renderButtonsLeft();
+		ENGINE.renderButtonsRight();
+	}
+
 	public void renderButtonsLeft() {
 		GameState.getRenderSink().setButtonsLeftContent(
 				"<div class='quarterContainer'>"

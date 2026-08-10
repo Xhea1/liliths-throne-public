@@ -39,18 +39,33 @@ public abstract class LTTask<T> implements Runnable {
 			running = false;
 			if (cancelled) {
 				for (Runnable listener : cancelledListeners) {
-					listener.run();
+					notifyListener(listener);
 				}
 			} else {
 				for (Consumer<T> listener : succeededListeners) {
-					listener.accept(value);
+					notifyListener(() -> listener.accept(value));
 				}
 			}
 		} catch (Exception e) {
 			running = false;
 			for (Consumer<Throwable> listener : failedListeners) {
-				listener.accept(e);
+				notifyListener(() -> listener.accept(e));
 			}
+		}
+	}
+
+	/**
+	 * Completion handlers usually touch the UI, so they run wherever the front-end needs rather
+	 * than on this worker thread. This mirrors {@code javafx.concurrent.Task}, whose handlers were
+	 * dispatched to the JavaFX application thread -- without it, JavaFX rejects the callback with
+	 * "Not on FX application thread".
+	 */
+	private void notifyListener(Runnable listener) {
+		com.lilithsthrone.main.Platform platform = com.lilithsthrone.main.GameState.getPlatform();
+		if (platform == null) {
+			listener.run();
+		} else {
+			platform.runOnUiThread(listener);
 		}
 	}
 

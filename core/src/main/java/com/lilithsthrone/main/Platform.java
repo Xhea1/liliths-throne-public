@@ -36,6 +36,16 @@ public interface Platform {
 	/** Replaces {@code Stage#setTitle(...)}; a no-op is a valid implementation. */
 	void refreshTitle();
 
+	/**
+	 * Runs work on whatever thread the front-end requires for UI-affecting calls.
+	 *
+	 * Background tasks ({@link com.lilithsthrone.utils.concurrent.LTTask}) complete on a worker
+	 * thread, but JavaFX rejects scene changes from anywhere but its application thread -- which
+	 * {@code javafx.concurrent.Task} used to handle implicitly by dispatching its completion
+	 * handlers there. Implementations that have no such affinity may run the task inline.
+	 */
+	void runOnUiThread(Runnable task);
+
 	/** Replaces {@code Toolkit.getDefaultToolkit().getSystemClipboard()}. */
 	void copyToClipboard(String text);
 

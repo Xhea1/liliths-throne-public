@@ -2929,16 +2929,11 @@ public class MainController implements Initializable, RenderSink {
 	}
 
 	public static void updateUIStatic() {
-		if (GameState.game.isRenderAttributesSection()) {
-			RenderingEngine.ENGINE.renderAttributesPanelLeft();
-			RenderingEngine.ENGINE.renderAttributesPanelRight();
-		}
-		updateUIButtons();
+		RenderingEngine.updateUI();
 	}
 	
 	public static void updateUIButtons() {
-		RenderingEngine.ENGINE.renderButtonsLeft();
-		RenderingEngine.ENGINE.renderButtonsRight();
+		RenderingEngine.updateUIButtons();
 	}
 	
 	public void updateUILeftPanel() {

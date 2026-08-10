@@ -77,6 +77,15 @@ public class AndroidPlatform implements Platform {
 		// No window title on Android.
 	}
 
+	/**
+	 * Runs inline: the engine owns its own thread and the WebView pulls rendered HTML over HTTP,
+	 * so there is no UI thread that game callbacks must be marshalled onto.
+	 */
+	@Override
+	public void runOnUiThread(Runnable task) {
+		task.run();
+	}
+
 	@Override
 	public void copyToClipboard(String text) {
 		android.content.ClipboardManager clipboard =

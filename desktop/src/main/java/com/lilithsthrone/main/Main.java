@@ -196,6 +196,15 @@ public class Main extends Application implements Platform {
 	}
 
 	@Override
+	public void runOnUiThread(Runnable task) {
+		if (javafx.application.Platform.isFxApplicationThread()) {
+			task.run();
+		} else {
+			javafx.application.Platform.runLater(task);
+		}
+	}
+
+	@Override
 	public void copyToClipboard(String text) {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		StringSelection data = new StringSelection(text);
