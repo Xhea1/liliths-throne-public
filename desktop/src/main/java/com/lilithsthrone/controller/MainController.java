@@ -194,16 +194,13 @@ public class MainController implements Initializable, RenderSink {
 	java.net.CookieManager cookieManager = new java.net.CookieManager();
 	
 	// Hotkey binding:
-	static KeyboardAction actionToBind;
-	static boolean primaryBinding;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		allowInput = true;
 		lastKeys = new KeyCode[5];
 
-		actionToBind = null;
-		primaryBinding = true;
+		Keybinds.clear();
 
 		webviewTooltip = new WebView();
 		webviewTooltip.setMaxWidth(400);
@@ -326,7 +323,7 @@ public class MainController implements Initializable, RenderSink {
 				Map.Entry<KeyboardAction, KeyCodeWithModifiers> existingBinding = findExistingBinding(bindings, lookingFor);
 				boolean hasExistingBinding = existingBinding != null;
 				if (hasExistingBinding) {
-					actionToBind = null;
+					Keybinds.clear();
 					printAlreadyExistingBinding(primarySecondary, existingBinding.getKey().getName(), existingBinding.getValue().getFullName());
 				}
 				return hasExistingBinding;
@@ -336,10 +333,10 @@ public class MainController implements Initializable, RenderSink {
 				if (allowInput) {
 					// Hotkey bindings:
 					if (GameState.game.getCurrentDialogueNode() == OptionsDialogue.KEYBINDS) {
-						if (actionToBind != null) {
+						if (Keybinds.getActionToBind() != null) {
 							KeyCode eventCode = event.getCode();
 							
-							//System.out.println(eventCode.getName()+" "+actionToBind);
+							//System.out.println(eventCode.getName()+" "+Keybinds.getActionToBind());
 							
 							if (eventCode == KeyCode.SHIFT || eventCode == KeyCode.CONTROL) {
 								return; // these are explicitly blocked to allow SHIFT + key and CTRL + key
@@ -350,18 +347,18 @@ public class MainController implements Initializable, RenderSink {
 								return; //such a binding already exists
 							}
 							KeyCodeWithModifiers newBinding = new KeyCodeWithModifiers(KeyCodes.toLT(eventCode), event.isControlDown(), event.isShiftDown());
-							if (primaryBinding)
-								GameState.getProperties().hotkeyMapPrimary.put(actionToBind, newBinding);
+							if (Keybinds.isPrimaryBinding())
+								GameState.getProperties().hotkeyMapPrimary.put(Keybinds.getActionToBind(), newBinding);
 							else
-								GameState.getProperties().hotkeyMapSecondary.put(actionToBind, newBinding);
-							actionToBind = null;
+								GameState.getProperties().hotkeyMapSecondary.put(Keybinds.getActionToBind(), newBinding);
+							Keybinds.clear();
 							GameState.saveProperties();
 							GameState.game.setContent(new Response("", "", GameState.game.getCurrentDialogueNode()));
 							return;
 						}
 						
 					} else {
-						actionToBind = null;
+						Keybinds.clear();
 					}
 					
 					if (!buttonsPressed.contains(event.getCode())) {
@@ -752,9 +749,9 @@ public class MainController implements Initializable, RenderSink {
 							GameCharacter slave = GameState.game.getDialogueFlags().getManagementCompanion();
 							if(GameState.game.getCurrentDialogueNode() == ScarlettsShop.HELENAS_SHOP_CUSTOM_SLAVE_PERSONALITY) {
 								slave = BodyChanging.getTarget();
-							} else if(GameState.game.getCurrentDialogueNode() == KaysWarehouse.KAY_OFFICE_DOMINATE_NAMING) {
+					} else if(GameState.game.getCurrentDialogueNode() == KaysWarehouse.KAY_OFFICE_DOMINATE_NAMING) {
 								slave = GameState.game.getNpc(Kay.class);
-							} else if(GameState.game.getCurrentDialogueNode() == ElementalDialogue.ELEMENTAL_CHOOSE_NAME) {
+					} else if(GameState.game.getCurrentDialogueNode() == ElementalDialogue.ELEMENTAL_CHOOSE_NAME) {
 								slave = GameState.game.getPlayer().getElemental();
 							}
 							GameCharacter slaveFinal = slave;
@@ -1244,6 +1241,10 @@ public class MainController implements Initializable, RenderSink {
 		if (Game.informationTooltips.size() > 0) {
 			MiscController.initInfoTooltipListeners();
 		}
+
+		// Screens whose controllers have moved into core register themselves; the branches below
+		// cover the ones still living in this module.
+		ScreenBindings.registerFor(GameState.game.getCurrentDialogueNode());
 		
 		// There are too many dialogue nodes that require CoveringChangeListeners so better to check by flag
 		if (GameState.game.getDialogueFlags().hasFlag(DialogueFlagValue.coveringChangeListenersRequired)) {
@@ -1629,33 +1630,11 @@ public class MainController implements Initializable, RenderSink {
 			}
 		} else if (currentNode.equals(OccupantManagementDialogue.OCCUPANT_OVERVIEW)) {
 			OccupantController.initOverviewListeners();
-		} else if (currentNode.equals(OptionsDialogue.AGE_PREFERENCE)) {
-			OptionsController.initAgeListeners();
-		} else if (currentNode.equals(OptionsDialogue.BODIES)) {
-			OptionsController.initBodiesListeners();
-		} else if (currentNode.equals(OptionsDialogue.GAMEPLAY)) {
-			OptionsController.initGameplayListeners();
-		} else if (currentNode.equals(OptionsDialogue.GENDER_PREFERENCE)) {
-			OptionsController.initGenderListeners();
-		} else if (currentNode.equals(OptionsDialogue.FETISH_PREFERENCE)) {
-			OptionsController.initFetishListeners();
-		} else if (currentNode.equals(OptionsDialogue.FURRY_PREFERENCE)) {
-			OptionsController.initFurryListeners();
-		} else if (currentNode.equals(OptionsDialogue.IMPORT_EXPORT)) {
+												} else if (currentNode.equals(OptionsDialogue.IMPORT_EXPORT)) {
 			FileController.initImportExportListeners();
-		} else if (currentNode.equals(OptionsDialogue.KEYBINDS)) {
-			OptionsController.initKeybindListeners();
-		} else if (currentNode.equals(OptionsDialogue.MISCELLANEOUS)) {
-			OptionsController.initMiscellaneousListeners();
-		} else if (currentNode.equals(OptionsDialogue.ORIENTATION_PREFERENCE)) {
-			OptionsController.initOrientationListeners();
-		} else if (currentNode.equals(OptionsDialogue.SAVE_LOAD)) {
+						} else if (currentNode.equals(OptionsDialogue.SAVE_LOAD)) {
 			FileController.initSaveLoadListeners();
-		} else if (currentNode.equals(OptionsDialogue.SEX)) {
-			OptionsController.initSexListeners();
-		} else if (currentNode.equals(OptionsDialogue.UNIT_PREFERENCE)) {
-			OptionsController.initUnitListeners();
-		} else if (currentNode.equals(PhoneDialogue.CLOTHING_CATALOGUE)) {
+				} else if (currentNode.equals(PhoneDialogue.CLOTHING_CATALOGUE)) {
 			MiscController.initEncyclopediaClothingListeners();
 		} else if (currentNode.equals(PhoneDialogue.ITEM_CATALOGUE)) {
 			MiscController.initEncyclopediaItemListeners();
@@ -2067,7 +2046,7 @@ public class MainController implements Initializable, RenderSink {
 								updateUIStatic();
 								GameState.game.updateResponses();
 								
-							} else if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.PHONE) {
+					} else if (GameState.game.getCurrentDialogueNode().getDialogueNodeType() == DialogueNodeType.PHONE) {
 								if(GameState.game.getCurrentDialogueNode() == PhoneDialogue.CHARACTER_PERK_TREE) {
 									openPhone();
 								} else {
@@ -2092,7 +2071,7 @@ public class MainController implements Initializable, RenderSink {
 							updateUIStatic();
 							GameState.game.updateResponses();
 							
-						} else if(GameState.game.isInCombat()) {
+				} else if(GameState.game.isInCombat()) {
 							GameState.combat.setTargetedCombatant((NPC) character);
 							updateUIStatic();
 							GameState.game.updateResponses();
@@ -2149,27 +2128,27 @@ public class MainController implements Initializable, RenderSink {
 						SexAreaInterface si = null;
 						if(se==StatusEffect.PENIS_STATUS) {
 							si = SexAreaPenetration.PENIS;
-						} else if(se==StatusEffect.ANUS_STATUS) {
+				} else if(se==StatusEffect.ANUS_STATUS) {
 							si = SexAreaOrifice.ANUS;
-						} else if(se==StatusEffect.ASS_STATUS) {
+				} else if(se==StatusEffect.ASS_STATUS) {
 							si = SexAreaOrifice.ASS;
-						} else if(se==StatusEffect.MOUTH_STATUS) {
+				} else if(se==StatusEffect.MOUTH_STATUS) {
 							si = SexAreaOrifice.MOUTH;
-						} else if(se==StatusEffect.BREAST_STATUS) {
+				} else if(se==StatusEffect.BREAST_STATUS) {
 							si = SexAreaOrifice.BREAST;
-						} else if(se==StatusEffect.BREAST_CROTCH_STATUS) {
+				} else if(se==StatusEffect.BREAST_CROTCH_STATUS) {
 							si = SexAreaOrifice.BREAST_CROTCH;
-						} else if(se==StatusEffect.NIPPLE_STATUS) {
+				} else if(se==StatusEffect.NIPPLE_STATUS) {
 							si = SexAreaOrifice.NIPPLE;
-						} else if(se==StatusEffect.NIPPLE_CROTCH_STATUS) {
+				} else if(se==StatusEffect.NIPPLE_CROTCH_STATUS) {
 							si = SexAreaOrifice.NIPPLE_CROTCH;
-						} else if(se==StatusEffect.THIGH_STATUS) {
+				} else if(se==StatusEffect.THIGH_STATUS) {
 							si = SexAreaOrifice.THIGHS;
-						} else if(se==StatusEffect.URETHRA_PENIS_STATUS) {
+				} else if(se==StatusEffect.URETHRA_PENIS_STATUS) {
 							si = SexAreaOrifice.URETHRA_PENIS;
-						} else if(se==StatusEffect.URETHRA_VAGINA_STATUS) {
+				} else if(se==StatusEffect.URETHRA_VAGINA_STATUS) {
 							si = SexAreaOrifice.URETHRA_VAGINA;
-						} else if(se==StatusEffect.VAGINA_STATUS) {
+				} else if(se==StatusEffect.VAGINA_STATUS) {
 							si = SexAreaOrifice.VAGINA;
 						}
 						if(si!=null) {
@@ -2474,7 +2453,7 @@ public class MainController implements Initializable, RenderSink {
 						openCharactersPresent(character);
 					}, false);
 					
-				} else if(GameState.game.isInSex()) {
+		} else if(GameState.game.isInSex()) {
 					((EventTarget) documentRight.getElementById("NPC_"+idModifier+"ATTRIBUTES")).addEventListener("click", e -> {
 						GameState.sex.setTargetedPartner(GameState.game.getPlayer(), character);
 						GameState.sex.recalculateSexActions();
@@ -2482,7 +2461,7 @@ public class MainController implements Initializable, RenderSink {
 						GameState.game.updateResponses();
 					}, false);
 					
-				} else if(GameState.game.isInCombat()) {
+		} else if(GameState.game.isInCombat()) {
 					((EventTarget) documentRight.getElementById("NPC_"+idModifier+"ATTRIBUTES")).addEventListener("click", e -> {
 						GameState.combat.setTargetedCombatant((NPC) character);
 						updateUIStatic();
@@ -2526,23 +2505,23 @@ public class MainController implements Initializable, RenderSink {
 							SexAreaInterface si = null;
 							if(se==StatusEffect.PENIS_STATUS) {
 								si = SexAreaPenetration.PENIS;
-							} else if(se==StatusEffect.ANUS_STATUS) {
+					} else if(se==StatusEffect.ANUS_STATUS) {
 								si = SexAreaOrifice.ANUS;
-							} else if(se==StatusEffect.ASS_STATUS) {
+					} else if(se==StatusEffect.ASS_STATUS) {
 								si = SexAreaOrifice.ASS;
-							} else if(se==StatusEffect.MOUTH_STATUS) {
+					} else if(se==StatusEffect.MOUTH_STATUS) {
 								si = SexAreaOrifice.MOUTH;
-							} else if(se==StatusEffect.BREAST_STATUS) {
+					} else if(se==StatusEffect.BREAST_STATUS) {
 								si = SexAreaOrifice.BREAST;
-							} else if(se==StatusEffect.NIPPLE_STATUS) {
+					} else if(se==StatusEffect.NIPPLE_STATUS) {
 								si = SexAreaOrifice.NIPPLE;
-							} else if(se==StatusEffect.THIGH_STATUS) {
+					} else if(se==StatusEffect.THIGH_STATUS) {
 								si = SexAreaOrifice.THIGHS;
-							} else if(se==StatusEffect.URETHRA_PENIS_STATUS) {
+					} else if(se==StatusEffect.URETHRA_PENIS_STATUS) {
 								si = SexAreaOrifice.URETHRA_PENIS;
-							} else if(se==StatusEffect.URETHRA_VAGINA_STATUS) {
+					} else if(se==StatusEffect.URETHRA_VAGINA_STATUS) {
 								si = SexAreaOrifice.URETHRA_VAGINA;
-							} else if(se==StatusEffect.VAGINA_STATUS) {
+					} else if(se==StatusEffect.VAGINA_STATUS) {
 								si = SexAreaOrifice.VAGINA;
 							}
 							if(si!=null) {
@@ -3139,11 +3118,11 @@ public class MainController implements Initializable, RenderSink {
 	}
 
 	public KeyboardAction getActionToBind() {
-		return actionToBind;
+		return Keybinds.getActionToBind();
 	}
 
 	public boolean isPrimaryBinding() {
-		return primaryBinding;
+		return Keybinds.isPrimaryBinding();
 	}
 	
 	public void switchTheme() {

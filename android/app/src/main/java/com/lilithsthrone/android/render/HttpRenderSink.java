@@ -8,6 +8,7 @@ import com.lilithsthrone.game.dialogue.DialogueNode;
 import com.lilithsthrone.game.dialogue.utils.InventoryInteraction;
 import com.lilithsthrone.game.settings.KeyboardAction;
 import com.lilithsthrone.controller.Panel;
+import com.lilithsthrone.controller.ScreenBindings;
 import com.lilithsthrone.controller.Screens;
 import com.lilithsthrone.main.GameState;
 import com.lilithsthrone.rendering.RenderSink;
@@ -76,6 +77,9 @@ public class HttpRenderSink implements RenderSink {
 	@Override
 	public void setMainContent(String content) {
 		mainContent = content == null ? "" : content;
+		// Desktop registers a screen's handlers while re-attaching DOM listeners; with no DOM to
+		// attach to, this is the equivalent moment -- the content for a node has just been built.
+		ScreenBindings.registerFor(GameState.game == null ? null : GameState.game.getCurrentDialogueNode());
 	}
 
 	@Override
