@@ -2,10 +2,13 @@ package com.lilithsthrone.android.ui;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebViewClient;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -32,8 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private WebView webView;
 	private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-	private int loadAttempts = 0;
-	/** Probe budget while the engine service starts (40 x 250ms = ~10s). */
+	/** Probe budget while the engine service starts (40 attempts, up to ~750ms each: <= ~30s). */
 	private static final int MAX_LOAD_ATTEMPTS = 40;
 
 	private final ActivityResultLauncher<Uri> pickSaveFolder =
@@ -52,9 +54,17 @@ public class MainActivity extends AppCompatActivity {
 				startEngineAndLoad();
 			});
 
+	/** Result is ignored: the engine runs either way, the notification is only a courtesy. */
+	private final ActivityResultLauncher<String> askNotifications =
+			registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> { });
+
 	@Override
 	protected void onCreate(@Nullable Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+			askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS);
+		}
 
 		webView = new WebView(this);
 		WebSettings settings = webView.getSettings();
@@ -70,6 +80,15 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				Log.i(TAG, "page loaded: " + url);
+			}
+
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+				if ("lt".equals(request.getUrl().getScheme())) { // the retry link on the error page
+					startEngineAndLoad();
+					return true;
+				}
+				return false;
 			}
 		});
 		setContentView(webView);
@@ -109,6 +128,16 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	private void waitForServerThenLoad() {
 		new Thread(() -> {
+			try {
+				LilithsThroneApplication.ASSETS_READY.await();
+			} catch (InterruptedException interrupted) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+			if (!LilithsThroneApplication.assetsOk()) {
+				handler.post(() -> showError("Could not unpack the game data (is the device out of space?)."));
+				return;
+			}
 			for (int attempt = 1; attempt <= MAX_LOAD_ATTEMPTS; attempt++) {
 				try (java.net.Socket probe = new java.net.Socket()) {
 					probe.connect(new java.net.InetSocketAddress("127.0.0.1", GameHttpServer.PORT), 500);
@@ -125,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
 				}
 			}
 			Log.e(TAG, "Engine never became reachable after " + MAX_LOAD_ATTEMPTS + " probes");
+			handler.post(() -> showError("The game engine did not start. Another app may be using port "
+					+ GameHttpServer.PORT + "."));
 		}, "lt-server-probe").start();
 	}
 
@@ -140,8 +171,15 @@ public class MainActivity extends AppCompatActivity {
 				"text/html", "utf-8", null);
 	}
 
+	private void showError(String message) {
+		webView.loadDataWithBaseURL(null,
+				"<html><body style='margin:0;background:#1a1a1a;color:#bbb;font-family:sans-serif;"
+				+ "display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>"
+				+ "<div>" + message + "<p><a style='color:#8cf' href='lt://retry'>Retry</a></p></div></body></html>",
+				"text/html", "utf-8", null);
+	}
+
 	private void attemptLoad() {
-		loadAttempts++;
 		webView.loadUrl("http://127.0.0.1:" + GameHttpServer.PORT + "/");
 	}
 

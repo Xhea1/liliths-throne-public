@@ -14,11 +14,7 @@ import com.lilithsthrone.utils.colours.Colour;
  *
  * Desktop's {@code MainController} implements this directly (it already had matching
  * methods before this type existed). Android's {@code HttpRenderSink} buffers the latest
- * HTML per panel for its HTTP routes to serve; methods not needed by the milestone that
- * introduced this interface (most of the panels beyond the main one, tooltip positioning,
- * inventory/phone/characters-present sub-screens) may throw
- * {@link UnsupportedOperationException} there rather than pretend to implement UI surfaces
- * Android doesn't have yet -- see the class-level note on HttpRenderSink for what's covered.
+ * HTML per panel for its HTTP routes to serve.
  */
 public interface RenderSink {
 

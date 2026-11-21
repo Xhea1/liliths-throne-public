@@ -16,13 +16,13 @@ import android.util.Log;
  *
  * Needed because {@code java.io.File} cannot read directly out of an APK's compressed assets,
  * and {@code core} loads its runtime data (dialogue XML, patch notes, ...) through {@code File}.
- * Idempotent: it re-unpacks only when the app's version code changes.
+ * Idempotent: it re-unpacks only when the app has been reinstalled or updated.
  */
 public class AssetUnpacker {
 
 	private static final String TAG = "LTAssets";
 	private static final String PREFS = "lt_assets";
-	private static final String KEY_VERSION = "unpacked_version";
+	private static final String KEY_STAMP = "unpacked_stamp";
 	private static final String ASSET_ROOT = "lt-res";
 
 	private final Context context;
@@ -31,19 +31,25 @@ public class AssetUnpacker {
 		this.context = context.getApplicationContext();
 	}
 
-	/** @param versionCode bump-triggered re-unpack key; pass the app's versionCode. */
-	public void unpackIfNeeded(int versionCode, File destRoot) {
+	/**
+	 * @param installStamp changes whenever the APK is reinstalled or updated (versionCode does not:
+	 *        it is never bumped during development), so updated game data is always re-unpacked.
+	 * @return false if unpacking failed; the stamp is then not recorded, so the next launch retries.
+	 */
+	public boolean unpackIfNeeded(long installStamp, File destRoot) {
 		SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-		if (prefs.getInt(KEY_VERSION, -1) == versionCode && destRoot.exists()) {
-			return;
+		if (prefs.getLong(KEY_STAMP, -1) == installStamp && destRoot.exists()) {
+			return true;
 		}
 		try {
 			destRoot.mkdirs();
 			copyDir(ASSET_ROOT, destRoot);
-			prefs.edit().putInt(KEY_VERSION, versionCode).apply();
+			prefs.edit().putLong(KEY_STAMP, installStamp).apply();
 			Log.i(TAG, "Unpacked assets to " + destRoot);
+			return true;
 		} catch (IOException e) {
 			Log.e(TAG, "Failed unpacking assets", e);
+			return false;
 		}
 	}
 

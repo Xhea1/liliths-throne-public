@@ -143,13 +143,19 @@ public class AndroidGameStorage implements GameStorage {
 		}
 		DocumentFile existing = resolve(relativePath, false);
 		if (existing != null) {
-			existing.delete(); // overwrite semantics, matching FileOutputStream
+			// "wt" truncates in place: deleting first would lose the file if we die mid-write, and
+			// a sync tool would see a delete.
+			OutputStream out = context.getContentResolver().openOutputStream(existing.getUri(), "wt");
+			if (out == null) {
+				throw new IOException("Could not open for writing: " + relativePath);
+			}
+			return out;
 		}
 		DocumentFile parent = resolveParent(relativePath, true);
 		if (parent == null) {
 			throw new IOException("Could not create parent folder for " + relativePath);
 		}
-		DocumentFile created = parent.createFile("text/xml", fileName(relativePath));
+		DocumentFile created = parent.createFile("application/octet-stream", fileName(relativePath));
 		if (created == null) {
 			throw new IOException("Could not create " + relativePath);
 		}

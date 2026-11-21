@@ -962,9 +962,9 @@ public class Game implements XMLSaving {
 	private static boolean debug = false;
 
 	public static void importGame(String name) {
-		File file = new File("data"+System.getProperty("file.separator")+"saves"+System.getProperty("file.separator"), name+".xml");
-
-		importGame(file);
+		// shortcut: saves stay in private app storage, so they don't sync to the PC yet;
+		// upgrade when the save screens stop passing java.io.File around (saves phase).
+		importGame(Storage.data("saves/"+name+".xml"));
 	}
 	
 	public static void importGame(File file) {

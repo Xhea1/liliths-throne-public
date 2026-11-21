@@ -64,7 +64,9 @@ tasks.named("preBuild") {
 
 dependencies {
 	// Pure-Java game logic, published by `mvn -pl core install` (see settings.gradle.kts).
-	implementation("innoxia:core:0.4.11.3")
+	// NOTE: run `mvn -pl core install` before every Gradle build. The version never changes, so
+	// without it Gradle keeps using the previously installed jar and edits to core never ship.
+	implementation("innoxia:core:0.4.11.3") { isChanging = true }
 	// Local HTTP server the WebView talks to.
 	implementation("org.nanohttpd:nanohttpd:2.3.1")
 	// DocumentFile, for the Storage-Access-Framework-backed save folder.

@@ -18,7 +18,8 @@ import com.lilithsthrone.main.GameState;
  * Hosts the game engine and its local HTTP server for as long as the user is playing.
  *
  * A foreground service (rather than plain background work) because Android's background-execution
- * limits would otherwise be free to kill the process holding all in-memory game state.
+ * limits would otherwise be free to kill the process holding all in-memory game state. It is
+ * stopped by the in-game Exit action ({@code AndroidPlatform.exitApplication}).
  */
 public class GameService extends Service {
 
@@ -39,7 +40,7 @@ public class GameService extends Service {
 
 		server = new GameHttpServer(sink);
 		try {
-			server.start(NanoHTTPDTimeouts.SOCKET_READ_TIMEOUT_MS, false);
+			server.start(10_000, false);
 			Log.i(TAG, "HTTP server listening on 127.0.0.1:" + GameHttpServer.PORT);
 		} catch (IOException e) {
 			Log.e(TAG, "Could not start HTTP server", e);
@@ -48,7 +49,8 @@ public class GameService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		return START_STICKY;
+		// Not sticky: a restart would bring back an engine with no game and no activity.
+		return START_NOT_STICKY;
 	}
 
 	@Override
@@ -79,10 +81,5 @@ public class GameService extends Service {
 				.setSmallIcon(android.R.drawable.ic_menu_edit)
 				.setOngoing(true)
 				.build();
-	}
-
-	/** Named for clarity at the call site rather than leaving a bare magic number. */
-	private static final class NanoHTTPDTimeouts {
-		static final int SOCKET_READ_TIMEOUT_MS = 10_000;
 	}
 }

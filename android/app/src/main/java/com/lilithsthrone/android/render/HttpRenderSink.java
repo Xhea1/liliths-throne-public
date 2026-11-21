@@ -20,10 +20,8 @@ import com.lilithsthrone.utils.colours.Colour;
  * version on request. The desktop sink pushes straight into live WebViews; here the flow is
  * inverted -- core writes into these fields, and the WebView pulls over HTTP.
  *
- * Scope note: this milestone renders the main panel only. The other panels are captured (so
- * nothing is lost and the next milestone can serve them) but no route exposes them yet. Screens
- * with no Android equivalent at all -- inventory, phone, characters-present, theme switching --
- * log and no-op rather than pretending to work.
+ * Every panel is buffered and served from {@code /panel/*}. Theme switching has no Android
+ * equivalent yet and logs rather than pretending to work.
  */
 public class HttpRenderSink implements RenderSink {
 
@@ -70,8 +68,11 @@ public class HttpRenderSink implements RenderSink {
 		return tooltipContent;
 	}
 
-	public String getFlashMessageText() {
-		return flashMessageText;
+	/** Returns the pending toast text and clears it, so each message is shown once. */
+	public String takeFlashMessageText() {
+		String text = flashMessageText;
+		flashMessageText = "";
+		return text;
 	}
 
 	@Override

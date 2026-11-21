@@ -1,12 +1,17 @@
 package com.lilithsthrone.android.service;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.lilithsthrone.android.LilithsThroneApplication;
 import com.lilithsthrone.android.render.HttpRenderSink;
 import com.lilithsthrone.controller.Panel;
 import com.lilithsthrone.controller.Ui;
@@ -60,7 +65,19 @@ public class GameHttpServer extends NanoHTTPD {
 
 	@Override
 	public Response serve(IHTTPSession session) {
+		// The engine, Ui's registry and the shared Rhino scope are single-threaded, but NanoHTTPD
+		// answers every request on its own thread (and the page fires several per tap).
+		synchronized (LilithsThroneApplication.ENGINE_LOCK) {
+			return serveLocked(session);
+		}
+	}
+
+	private Response serveLocked(IHTTPSession session) {
 		String uri = session.getUri();
+		// Other apps and any browser tab can reach loopback; only our own WebView sends this Host.
+		if (!("127.0.0.1:" + PORT).equals(session.getHeaders().get("host"))) {
+			return newFixedLengthResponse(Response.Status.FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
+		}
 		try {
 			switch (uri) {
 				case "/":
@@ -95,7 +112,7 @@ public class GameHttpServer extends NanoHTTPD {
 
 				case "/action":
 					bootGameIfNeeded();
-					return html(handleAction(session));
+					return handleAction(session);
 
 				default:
 					return newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Not found: " + uri);
@@ -108,21 +125,39 @@ public class GameHttpServer extends NanoHTTPD {
 
 	/**
 	 * Dispatches a clicked element id to the equivalent game action, then returns the freshly
-	 * rendered main panel. Mirrors desktop's {@code SetContentEventListener} id conventions.
+	 * rendered main panel, or 204 if the id did nothing (so the page keeps its inputs and scroll).
+	 * Mirrors desktop's {@code SetContentEventListener} id conventions.
 	 */
-	private String handleAction(IHTTPSession session) throws IOException, ResponseException {
+	private Response handleAction(IHTTPSession session) throws IOException, ResponseException {
+		// Without a JSON body type a cross-site form post could drive the game with no preflight.
+		String contentType = session.getHeaders().get("content-type");
+		if (contentType == null || !contentType.startsWith("application/json")) {
+			return newFixedLengthResponse(Response.Status.FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
+		}
 		Map<String, String> body = new java.util.HashMap<>();
 		session.parseBody(body);
-		String json = body.get("postData");
-		String id = session.getParameters().containsKey("id")
-				? session.getParameters().get("id").get(0)
-				: extractField(json, "id");
-		Panel panel = parsePanel(extractField(json, "panel"));
-		sink.setInputValues(extractInputs(json));
 
-		if (id == null || id.isEmpty()) {
-			Log.w(TAG, "action with no id");
-			return sink.getMainContent();
+		String id;
+		Panel panel;
+		Map<String, String> inputs = new java.util.HashMap<>();
+		try {
+			JSONObject json = new JSONObject(body.get("postData"));
+			id = json.optString("id");
+			panel = parsePanel(json.optString("panel"));
+			JSONObject fields = json.optJSONObject("inputs");
+			if (fields != null) {
+				for (java.util.Iterator<String> keys = fields.keys(); keys.hasNext();) {
+					String key = keys.next();
+					inputs.put(key, fields.optString(key));
+				}
+			}
+		} catch (JSONException | NullPointerException e) {
+			return newFixedLengthResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, "Bad request");
+		}
+		sink.setInputValues(inputs);
+
+		if (id.isEmpty()) {
+			return noContent();
 		}
 		Log.i(TAG, "action id=" + id);
 
@@ -137,55 +172,41 @@ public class GameHttpServer extends NanoHTTPD {
 			// Not every id is bound yet; log rather than fail so the gap is visible while the
 			// remaining controllers are migrated into core.
 			Log.i(TAG, "unhandled id: " + id + " (panel " + panel + ")");
+			return noContent();
 		}
-		return sink.getMainContent();
+
+		Response response = html(sink.getMainContent());
+		// Lets the page tell "same screen re-rendered" (keep scroll) from "new screen" (scroll to top).
+		response.addHeader("X-LT-Node", String.valueOf(System.identityHashCode(GameState.game.getCurrentDialogueNode())));
+		String flash = sink.takeFlashMessageText();
+		if (!flash.isEmpty()) {
+			response.addHeader("X-LT-Flash", encode(flash));
+			response.addHeader("X-LT-Flash-Colour", sink.getFlashMessageColour() == null
+					? "#ffffff" : sink.getFlashMessageColour().toWebHexString());
+		}
+		return response;
+	}
+
+	private Response noContent() {
+		return newFixedLengthResponse(Response.Status.NO_CONTENT, MIME_PLAINTEXT, "");
+	}
+
+	/** Header-safe text; URLEncoder writes spaces as '+', which decodeURIComponent would not undo. */
+	private static String encode(String text) {
+		try {
+			return URLEncoder.encode(text, "UTF-8").replace("+", "%20");
+		} catch (java.io.UnsupportedEncodingException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 	/** Which panel the click came from; ids are only unique within a panel. */
 	private static Panel parsePanel(String panel) {
-		if (panel == null) {
-			return Panel.MAIN;
-		}
 		try {
 			return Panel.valueOf(panel);
 		} catch (IllegalArgumentException e) {
 			return Panel.MAIN;
 		}
-	}
-
-	/**
-	 * Pulls the {@code "inputs":{...}} object out of the posted body: a flat map of element id to
-	 * current text, which stands in for the live DOM the desktop front-end can interrogate.
-	 */
-	private static Map<String, String> extractInputs(String json) {
-		Map<String, String> values = new java.util.HashMap<>();
-		if (json == null) {
-			return values;
-		}
-		Matcher object = Pattern.compile("\"inputs\"\\s*:\\s*\\{(.*?)\\}", Pattern.DOTALL).matcher(json);
-		if (!object.find()) {
-			return values;
-		}
-		Matcher entry = Pattern.compile("\"([^\"]+)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(object.group(1));
-		while (entry.find()) {
-			values.put(entry.group(1), unescape(entry.group(2)));
-		}
-		return values;
-	}
-
-	/** Reverses the escaping JSON.stringify applies to the field values. */
-	private static String unescape(String value) {
-		return value.replace("\\n", "\n").replace("\\r", "\r").replace("\\t", "\t")
-				.replace("\\\"", "\"").replace("\\\\", "\\");
-	}
-
-	/** Minimal string-field extraction, to avoid pulling in a JSON dependency for two fields. */
-	private static String extractField(String json, String field) {
-		if (json == null) {
-			return null;
-		}
-		Matcher m = Pattern.compile("\"" + field + "\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
-		return m.find() ? m.group(1) : null;
 	}
 
 	/** Serves a stylesheet straight out of core's jar resources. */

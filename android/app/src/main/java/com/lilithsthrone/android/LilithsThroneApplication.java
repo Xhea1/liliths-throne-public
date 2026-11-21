@@ -26,6 +26,13 @@ public class LilithsThroneApplication extends Application {
 	 */
 	private static final String KEY_SETUP_DONE = "storage_setup_done";
 
+	/** Serialises every touch of the engine: HTTP request threads and LTTask completions alike. */
+	public static final Object ENGINE_LOCK = new Object();
+
+	/** Released once game data has been unpacked (or has failed to); the engine must not boot before. */
+	public static final java.util.concurrent.CountDownLatch ASSETS_READY = new java.util.concurrent.CountDownLatch(1);
+	private static volatile boolean assetsOk;
+
 	private static AndroidGameStorage storage;
 
 	@Override
@@ -42,16 +49,37 @@ public class LilithsThroneApplication extends Application {
 		Uri granted = getGrantedDataTree(this);
 		if (granted != null) {
 			storage.setDataTree(granted);
-			Log.i(TAG, "Reusing granted save folder: " + granted);
+			if (storage.hasDataTree()) {
+				Log.i(TAG, "Reusing granted save folder: " + granted);
+			} else {
+				// Deleted, moved or revoked: without this the engine fails on every start with no
+				// way back to the picker.
+				Log.w(TAG, "Granted save folder is no longer usable; asking again: " + granted);
+				storage.setDataTree(null);
+				getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+						.remove(KEY_DATA_TREE).remove(KEY_SETUP_DONE).apply();
+			}
 		}
 
-		int versionCode = 1;
+		long installStamp = 1;
 		try {
-			versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+			installStamp = getPackageManager().getPackageInfo(getPackageName(), 0).lastUpdateTime;
 		} catch (Exception e) {
-			Log.w(TAG, "Could not read versionCode", e);
+			Log.w(TAG, "Could not read install time", e);
 		}
-		new AssetUnpacker(this).unpackIfNeeded(versionCode, storage.resDir());
+		// ~48MB of small files: off the main thread, or first launch trips the ANR watchdog.
+		final long stamp = installStamp;
+		new Thread(() -> {
+			try {
+				assetsOk = new AssetUnpacker(this).unpackIfNeeded(stamp, storage.resDir());
+			} finally {
+				ASSETS_READY.countDown();
+			}
+		}, "lt-asset-unpack").start();
+	}
+
+	public static boolean assetsOk() {
+		return assetsOk;
 	}
 
 	public static AndroidGameStorage storage() {

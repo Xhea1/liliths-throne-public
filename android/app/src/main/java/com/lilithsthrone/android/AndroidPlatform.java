@@ -67,9 +67,9 @@ public class AndroidPlatform implements Platform {
 
 	@Override
 	public void exitApplication() {
-		// Stopping the engine service is handled by the Activity's lifecycle; there is no
-		// desktop-style "quit the process" concept worth forcing on Android.
 		Log.i(TAG, "exitApplication() requested");
+		context.stopService(new Intent(context, com.lilithsthrone.android.service.GameService.class));
+		System.exit(0); // all game state lives in this process, so ending it is the clean exit
 	}
 
 	@Override
@@ -78,12 +78,14 @@ public class AndroidPlatform implements Platform {
 	}
 
 	/**
-	 * Runs inline: the engine owns its own thread and the WebView pulls rendered HTML over HTTP,
-	 * so there is no UI thread that game callbacks must be marshalled onto.
+	 * There is no UI thread to marshal onto, but the engine is single-threaded while HTTP requests
+	 * arrive on many, so completion handlers take the same lock the server does.
 	 */
 	@Override
 	public void runOnUiThread(Runnable task) {
-		task.run();
+		synchronized (LilithsThroneApplication.ENGINE_LOCK) {
+			task.run();
+		}
 	}
 
 	@Override

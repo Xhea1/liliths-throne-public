@@ -751,7 +751,9 @@ public class GameState {
 	}
 
 	public static boolean isLoadGameAvailable(String name) {
-		return Storage.get().dataFileExists("saves/"+name+".xml");
+		// shortcut: saves stay in private app storage, so they don't sync to the PC yet;
+		// upgrade when the save screens stop passing java.io.File around (saves phase).
+		return Storage.data("saves/"+name+".xml").exists();
 	}
 
 	public static void loadGame(String name) {
@@ -771,9 +773,9 @@ public class GameState {
 	}
 
 	public static void deleteGame(String name) {
-		if (Storage.get().dataFileExists("saves/"+name+".xml")) {
+		if (Storage.data("saves/"+name+".xml").exists()) {
 			try {
-				Storage.get().deleteDataFile("saves/"+name+".xml");
+				Storage.data("saves/"+name+".xml").delete();
 				game.setContent(new Response("", "", game.getCurrentDialogueNode()));
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -789,9 +791,9 @@ public class GameState {
 	}
 
 	public static void deleteExportedCharacter(String name) {
-		if (Storage.get().dataFileExists("characters/"+name+".xml")) {
+		if (Storage.data("characters/"+name+".xml").exists()) {
 			try {
-				Storage.get().deleteDataFile("characters/"+name+".xml");
+				Storage.data("characters/"+name+".xml").delete();
 				game.setContent(new Response("", "", game.getCurrentDialogueNode()));
 			} catch (Exception ex) {
 				ex.printStackTrace();

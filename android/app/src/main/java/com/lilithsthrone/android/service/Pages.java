@@ -39,6 +39,7 @@ final class Pages {
 				+ "<div id='panel-buttons-right' data-panel='BUTTONS_RIGHT'>" + buttonsRight + "</div>"
 				+ "</div>"
 				+ "</div>"
+				+ "<div id='toast'></div>"
 				+ "<script>" + SCRIPT + "</script>"
 				+ "</body></html>";
 	}
@@ -90,7 +91,12 @@ final class Pages {
 			+ "align-items:center;justify-content:center}"
 			+ "#RESPONSE_BOX .response-text{position:static;width:auto;padding:0 6px;margin:0}"
 			// Keyboard shortcut badges ("DIGIT1", "SHIFT + DIGIT2", ...) mean nothing on touch.
-			+ ".hotkey-icon{display:none !important}";
+			+ ".hotkey-icon{display:none !important}"
+			// Transient engine messages ("Game saved!", "Name too short!").
+			+ "#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:10;"
+			+ "background:#222;border:1px solid #444;border-radius:4px;padding:6px 14px;"
+			+ "font-size:1.1em;opacity:0;pointer-events:none;transition:opacity .3s}"
+			+ "#toast.show{opacity:1}";
 
 	/**
 	 * Relocating the response box is done in script rather than CSS because the game's own
@@ -132,17 +138,36 @@ final class Pages {
 			+ "var p=el.closest('[data-panel]');"
 			+ "return p?p.getAttribute('data-panel'):'MAIN';"
 			+ "}"
+			+ "var lastNode=null;"
+			+ "function toast(text,colour){"
+			+ "var t=document.getElementById('toast');"
+			+ "t.textContent=text;t.style.color=colour;t.className='show';"
+			+ "clearTimeout(toast.h);toast.h=setTimeout(function(){t.className='';},2500);"
+			+ "}"
 			+ "relocateActionBar();"
 			+ "document.addEventListener('click',function(e){"
+			// Typing into a field must not count as an action: the swap below would destroy it.
+			+ "if(e.target.closest('input,textarea,select'))return;"
 			+ "var el=e.target.closest('[id]');"
 			+ "if(!el||!el.id)return;"
 			+ "fetch('/action',{method:'POST',headers:{'Content-Type':'application/json'},"
 			+ "body:JSON.stringify({id:el.id,type:'click',panel:panelOf(el),inputs:inputSnapshot()})})"
-			+ ".then(function(r){return r.text()})"
-			+ ".then(function(html){"
-			+ "document.getElementById('content').innerHTML=html;"
+			+ ".then(function(r){"
+			// 204: the id did nothing, so leave the page (and any half-typed text) alone.
+			+ "if(r.status===204)return null;"
+			+ "var node=r.headers.get('X-LT-Node');"
+			+ "var flash=r.headers.get('X-LT-Flash');"
+			+ "if(flash)toast(decodeURIComponent(flash),r.headers.get('X-LT-Flash-Colour'));"
+			+ "return r.text().then(function(html){return {html:html,node:node};});"
+			+ "})"
+			+ ".then(function(res){"
+			+ "if(!res)return;"
+			+ "var c=document.getElementById('content');"
+			+ "var keep=res.node!==null&&res.node===lastNode?c.scrollTop:0;"
+			+ "lastNode=res.node;"
+			+ "c.innerHTML=res.html;"
 			+ "relocateActionBar();"
-			+ "document.getElementById('content').scrollTop=0;"
+			+ "c.scrollTop=keep;"
 			+ "refreshPanels();"
 			+ "})"
 			+ ".catch(function(err){console.error('action failed',err)});"
